@@ -21,8 +21,8 @@ import (
 	"hasucalc/version"
 )
 
-// localIOFixture returns a path under testdata/local/ (or legacy repo root) if present.
-// Optional Office/HWK fixtures are not shipped in the public tree.
+// localIOFixture returns a path under an optional local fixture dir if present.
+// Fixtures are never shipped; tests Skip when absent.
 func localIOFixture(name string) string {
 	candidates := []string{
 		filepath.Join("testdata", "local", name),
@@ -1036,8 +1036,7 @@ func TestFunctionPickerModal(t *testing.T) {
 }
 
 func TestXLSXImporterWithRealFiles(t *testing.T) {
-	// Optional local fixtures only (see testdata/local/). Personal/sample workbooks
-	// are not shipped in the public tree.
+	// Optional local fixtures only. Sample workbooks are not shipped.
 	files := []string{
 		"sample.xlsx",
 		"sample-5.xlsx",
@@ -1046,7 +1045,7 @@ func TestXLSXImporterWithRealFiles(t *testing.T) {
 	for _, name := range files {
 		fn := localIOFixture(name)
 		if fn == "" {
-			t.Logf("Skipping %s (not in testdata/local/)", name)
+			t.Logf("Skipping %s (no local fixture)", name)
 			continue
 		}
 		found++
@@ -1069,7 +1068,7 @@ func TestXLSXImporterWithRealFiles(t *testing.T) {
 		}
 	}
 	if found == 0 {
-		t.Skip("no optional XLSX fixtures in testdata/local/")
+		t.Skip("no optional XLSX fixtures locally")
 	}
 }
 
@@ -1278,7 +1277,7 @@ func TestCrossSheetReferences(t *testing.T) {
 func TestSample5CalendarMultiSheet(t *testing.T) {
 	sample5Path := localIOFixture("sample-5.xlsx")
 	if sample5Path == "" {
-		t.Skip("optional fixture sample-5.xlsx not in testdata/local/")
+		t.Skip("optional fixture sample-5.xlsx not found locally")
 	}
 	wb, err := sheet.ImportXLSXWorkbook(sample5Path)
 	if err != nil {
@@ -1323,7 +1322,7 @@ func TestSampleDatabaseXLSX(t *testing.T) {
 	t0 := time.Now()
 	sampleDBPath := localIOFixture("sampleデータベース.xlsx")
 	if sampleDBPath == "" {
-		t.Skip("optional fixture sampleデータベース.xlsx not in testdata/local/")
+		t.Skip("optional fixture sampleデータベース.xlsx not found locally")
 	}
 	sheetNames, err := sheet.GetXLSXSheetList(sampleDBPath)
 	if err != nil {
@@ -1373,7 +1372,7 @@ func TestSampleDatabaseXLSX(t *testing.T) {
 func TestPerpetualCalendarODS(t *testing.T) {
 	odsPath := localIOFixture("Perpetual-Calendar-Version-26-0.ods")
 	if odsPath == "" {
-		t.Skip("optional fixture Perpetual-Calendar-Version-26-0.ods not in testdata/local/")
+		t.Skip("optional fixture Perpetual-Calendar-Version-26-0.ods not found locally")
 	}
 	wb, err := sheet.ImportODSWorkbook(odsPath)
 	if err != nil {
@@ -1448,7 +1447,7 @@ func TestPerpetualCalendarODS(t *testing.T) {
 func TestExcelCardXLSM(t *testing.T) {
 	xlsmPath := localIOFixture("ExcelCardDT_flw.xlsm")
 	if xlsmPath == "" {
-		t.Skip("optional fixture ExcelCardDT_flw.xlsm not in testdata/local/")
+		t.Skip("optional fixture ExcelCardDT_flw.xlsm not found locally")
 	}
 	wb, err := sheet.ImportXLSXWorkbook(xlsmPath)
 	if err != nil {

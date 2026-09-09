@@ -35,5 +35,5 @@ Thumbs.db
 /sheet.123.json
 /sheet.csv
 
-# Optional local fixtures for manual I/O tests (developers only)
-/testdata/local/
+# Local fixtures / scratch (never publish; may contain personal files)
+/testdata/
