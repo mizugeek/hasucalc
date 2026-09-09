@@ -4985,6 +4985,10 @@ func (a *App) loadFile(fn string) {
 		a.importCSVFile(fn)
 		return
 	}
+	if ext == ".md" || ext == ".markdown" || ext == ".html" || ext == ".htm" {
+		a.importMarkupFile(fn)
+		return
+	}
 	if ext == ".xlsx" || ext == ".xlsm" {
 		a.importXLSXFile(fn)
 		return
@@ -5119,6 +5123,25 @@ func (a *App) importCSVFile(fn string) {
 		a.statusMessage = fmt.Sprintf("Imported CSV from '%s'.", filepath.Base(fn))
 	} else {
 		a.statusMessage = fmt.Sprintf("Error importing CSV: %v", err)
+	}
+}
+
+func (a *App) importMarkupFile(fn string) {
+	RenderLoadingModal(a.screen, fn, "Parsing tables & text...", a.styles)
+	if s, err := sheet.ImportMarkupFile(fn); err == nil {
+		a.pushUndoWorkbook()
+		base := strings.TrimSuffix(filepath.Base(fn), filepath.Ext(fn))
+		a.filename = base + ".hwk"
+		wb := sheet.NewWorkbook(a.filename)
+		s.SetName(wb.Sheets[0].Name())
+		s.SetWorkbook(wb)
+		wb.Sheets[0] = s
+		a.workbook = wb
+		a.sheet = s
+		a.resetViewportAndViews()
+		a.statusMessage = fmt.Sprintf("Imported markup from '%s'.", filepath.Base(fn))
+	} else {
+		a.statusMessage = fmt.Sprintf("Error importing markup: %v", err)
 	}
 }
 

@@ -49,7 +49,7 @@
 
 ### 1.3 CLI コマンドライン起動オプション
 ```bash
-hasucalc [file]         # 表ファイル (.hwk, .hwkz, .xlsx, .ods, .csv) を直接開く
+hasucalc [file]         # 表ファイル (.hwk, .hwkz, .xlsx, .ods, .csv, .md, .html) を直接開く
 hasucalc --demo, -d     # サンプルデータ & グラフ設定済みデモ画面で起動
 hasucalc --version, -v  # バージョン情報 (HasuCalc 2.0.2, Go runtime, OS/Arch) を表示
 hasucalc --help, -h     # コマンドラインヘルプを表示
@@ -407,7 +407,9 @@ Excel リボン語彙に寄せた階層。`Ctrl+K` パレットからも同機�
 * **Excel (`.xlsx`)**: 複数シートのセル・数式・名前などを入出力する。**グラフ（チャート）は対象外**（§3.9）。Excel 互換を謳うものではない。
 * **LibreOffice (`.ods`)**: 複数シートの表データを入出力する。**グラフは対象外**（§3.9）。
 * **CSV (`.csv`)**: **UTF-8 BOM（`0xEF, 0xBB, 0xBF`）を自動付与**し、他表計算ソフトで文字化けしにくくする。
-* **Markdown (`.md`)**: GitHub Flavored Markdown 表形式出力。
+* **Markdown (`.md`)**: GFM 表の**書き出し**に加え、`.md` / `.markdown` の**読み込み**（パイプ表はグリッド、それ以外は A 列ラベル）。
+* **HTML (`.html` / `.htm`)**: **読み込みのみ** — `<table>` をセル化、見出し・段落・リストはラベル。ブラウザ並みの HTML エンジンではない。
+* **Markdown (`.md`) 書き出し**: GitHub Flavored Markdown 表形式出力。
 
 ---
 

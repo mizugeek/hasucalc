@@ -132,7 +132,7 @@ func main() {
 		} else if arg == "--help" || arg == "-h" {
 			fmt.Printf("HasuCalc %s - Modern Terminal Spreadsheet (CLI / TUI)\n\n", Version)
 			fmt.Println("Usage:")
-			fmt.Println("  hasucalc [file]         Open a spreadsheet file (.hwk, .hwkz, .xlsx, .ods, .csv)")
+			fmt.Println("  hasucalc [file]         Open a spreadsheet file (.hwk, .hwkz, .xlsx, .ods, .csv, .md, .html)")
 			fmt.Println("  hasucalc --demo, -d     Launch with preloaded sample traffic & graph demo data")
 			fmt.Println("  hasucalc --version, -v  Print version information and exit")
 			fmt.Println("  hasucalc --help, -h     Show this help message and exit")
@@ -163,6 +163,14 @@ func main() {
 				filename = baseName + ".hwk"
 				if loadedCSV, err := sheet.ImportSheetCSV(arg); err == nil {
 					sh = loadedCSV
+				} else {
+					loadErr = err
+				}
+			} else if ext == ".md" || ext == ".markdown" || ext == ".html" || ext == ".htm" {
+				baseName := strings.TrimSuffix(filepath.Base(arg), filepath.Ext(arg))
+				filename = baseName + ".hwk"
+				if loadedMarkup, err := sheet.ImportMarkupFile(arg); err == nil {
+					sh = loadedMarkup
 				} else {
 					loadErr = err
 				}

@@ -90,6 +90,7 @@ Incremental search in a centered window, for example:
 - Ranges: both `:` and `..` (spaces like `A1 : B10` OK)
 - Cross-sheet: `=Sheet2!A1`; workbook auto-recalc while editing
 - Grid size: up to **1,048,576 rows × 16,384 columns (`A`–`XFD`)** (sparse; empty rows cost no memory)
+- Open `.md` / `.html`: tables become grid cells; other text becomes column-A labels
 
 ---
 

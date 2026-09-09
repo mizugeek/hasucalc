@@ -1848,7 +1848,11 @@ func TestCrossSheetCopyPaste(t *testing.T) {
 }
 
 func TestMultilingualWorkbookCrossSheetCopyPaste(t *testing.T) {
-	wb, err := sheet.LoadWorkbookJSON("demo_multilingual_all.hwk")
+	path := localIOFixture("demo_multilingual_all.hwk")
+	if path == "" {
+		t.Skip("optional fixture demo_multilingual_all.hwk not found locally")
+	}
+	wb, err := sheet.LoadWorkbookJSON(path)
 	if err != nil {
 		t.Fatalf("Failed to load demo_multilingual_all.hwk: %v", err)
 	}
@@ -1888,7 +1892,11 @@ func TestDebugArabicToJapaneseCopy(t *testing.T) {
 	defer simScreen.Fini()
 	simScreen.SetSize(100, 30)
 
-	wb, err := sheet.LoadWorkbookJSON("demo_multilingual_all.hwk")
+	path := localIOFixture("demo_multilingual_all.hwk")
+	if path == "" {
+		t.Skip("optional fixture demo_multilingual_all.hwk not found locally")
+	}
+	wb, err := sheet.LoadWorkbookJSON(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1942,7 +1950,11 @@ func TestPasteLinkCrossSheet(t *testing.T) {
 	defer simScreen.Fini()
 	simScreen.SetSize(100, 30)
 
-	wb, err := sheet.LoadWorkbookJSON("demo_multilingual_all.hwk")
+	path := localIOFixture("demo_multilingual_all.hwk")
+	if path == "" {
+		t.Skip("optional fixture demo_multilingual_all.hwk not found locally")
+	}
+	wb, err := sheet.LoadWorkbookJSON(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2012,7 +2024,11 @@ func TestPasteLinkViaSlashMenu(t *testing.T) {
 	defer simScreen.Fini()
 	simScreen.SetSize(100, 30)
 
-	wb, err := sheet.LoadWorkbookJSON("demo_multilingual_all.hwk")
+	path := localIOFixture("demo_multilingual_all.hwk")
+	if path == "" {
+		t.Skip("optional fixture demo_multilingual_all.hwk not found locally")
+	}
+	wb, err := sheet.LoadWorkbookJSON(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2058,17 +2074,30 @@ func TestPasteLinkViaSlashMenu(t *testing.T) {
 }
 
 func TestFilePickerTypeAhead(t *testing.T) {
+	dir := t.TempDir()
+	for _, name := range []string{"demo_arabic.hwk", "demo_chinese.hwk", "demo_multilingual_all.hwk"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("{}"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	oldWD, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(oldWD) })
+
 	fp := tui.NewFilePicker()
 	fp.Open(tui.FilePickerModeOpen, "")
 
-	// Simulate pressing 'd', then 'e', then 'm', then 'o', then '_'
-	// In the workspace directory, we have demo_arabic.hwk, demo_chinese.hwk, demo_multilingual_all.hwk, etc.
 	fp.HandleKey(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
 	fp.HandleKey(tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModNone))
 	fp.HandleKey(tcell.NewEventKey(tcell.KeyRune, 'm', tcell.ModNone))
 	fp.HandleKey(tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone))
 	fp.HandleKey(tcell.NewEventKey(tcell.KeyRune, '_', tcell.ModNone))
-	fp.HandleKey(tcell.NewEventKey(tcell.KeyRune, 'm', tcell.ModNone)) // demo_m... -> demo_multilingual_all.hwk
+	fp.HandleKey(tcell.NewEventKey(tcell.KeyRune, 'm', tcell.ModNone)) // demo_m...
 
 	selected := fp.GetSelectedEntryForTest()
 	if !strings.HasPrefix(selected.Name, "demo_m") {
@@ -2077,7 +2106,11 @@ func TestFilePickerTypeAhead(t *testing.T) {
 }
 
 func TestExportXLSXAndODS(t *testing.T) {
-	wb, err := sheet.LoadWorkbookJSON("demo_multilingual_all.hwk")
+	path := localIOFixture("demo_multilingual_all.hwk")
+	if path == "" {
+		t.Skip("optional fixture demo_multilingual_all.hwk not found locally")
+	}
+	wb, err := sheet.LoadWorkbookJSON(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2206,7 +2239,11 @@ func TestExportMarkdownViaSlashMenu(t *testing.T) {
 	defer simScreen.Fini()
 	simScreen.SetSize(100, 30)
 
-	wb, err := sheet.LoadWorkbookJSON("demo_multilingual_all.hwk")
+	path := localIOFixture("demo_multilingual_all.hwk")
+	if path == "" {
+		t.Skip("optional fixture demo_multilingual_all.hwk not found locally")
+	}
+	wb, err := sheet.LoadWorkbookJSON(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2324,7 +2361,11 @@ func TestFullVsRangeExportIsolation(t *testing.T) {
 	defer simScreen.Fini()
 	simScreen.SetSize(100, 30)
 
-	wb, err := sheet.LoadWorkbookJSON("demo_multilingual_all.hwk")
+	path := localIOFixture("demo_multilingual_all.hwk")
+	if path == "" {
+		t.Skip("optional fixture demo_multilingual_all.hwk not found locally")
+	}
+	wb, err := sheet.LoadWorkbookJSON(path)
 	if err != nil {
 		t.Fatal(err)
 	}

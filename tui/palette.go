@@ -95,7 +95,7 @@ var DefaultPaletteItems = []PaletteItem{
 	{"Chart", "Export Chart Image (.png)", "", "doGraphSavePNG"},
 
 	{"File", "New Worksheet (Blank)", "", "doWorksheetErase"},
-	{"File", "Open File (.hwk, .xlsx, .ods, .csv, .json)", "Ctrl+O", "doFileOpenDialog"},
+	{"File", "Open File (.hwk, .xlsx, .ods, .csv, .md, .html, .json)", "Ctrl+O", "doFileOpenDialog"},
 	{"File", "Save Worksheet", "Ctrl+S", "doFileSaveDialog"},
 	{"File", "Export CSV File (Active Sheet)", "", "doFileExportCSVFullDialog"},
 	{"File", "Export Excel (.xlsx) Workbook (All Sheets)", "", "doFileExportXLSXFullDialog"},

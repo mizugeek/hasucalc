@@ -336,7 +336,7 @@ func (fp *FilePicker) readDirectory() {
 			match := true
 			switch fp.mode {
 			case FilePickerModeOpen:
-				match = (ext == ".hwk" || ext == ".hwkz" || ext == ".gz" || ext == ".json" || ext == ".csv" || ext == ".tsv" || ext == ".xlsx" || ext == ".xlsm" || ext == ".ods" || ext == ".ots" || ext == ".wk3" || ext == ".123" || strings.HasSuffix(name, ".123.json") || strings.HasSuffix(name, ".hwk.gz"))
+				match = (ext == ".hwk" || ext == ".hwkz" || ext == ".gz" || ext == ".json" || ext == ".csv" || ext == ".tsv" || ext == ".xlsx" || ext == ".xlsm" || ext == ".ods" || ext == ".ots" || ext == ".md" || ext == ".markdown" || ext == ".html" || ext == ".htm" || ext == ".wk3" || ext == ".123" || strings.HasSuffix(name, ".123.json") || strings.HasSuffix(name, ".hwk.gz"))
 			case FilePickerModeSave:
 				match = (ext == ".hwk" || ext == ".hwkz" || ext == ".gz" || ext == ".json" || strings.HasSuffix(name, ".123.json") || strings.HasSuffix(name, ".hwk.gz"))
 			case FilePickerModeImportCSV:

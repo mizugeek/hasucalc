@@ -46,7 +46,7 @@ Official documentation for the modern terminal spreadsheet **HasuCalc 2.0**: arc
 
 ### 1.3 CLI options
 ```bash
-hasucalc [file]         # Open .hwk, .hwkz, .xlsx, .ods, .csv
+hasucalc [file]         # Open .hwk, .hwkz, .xlsx, .ods, .csv, .md, .html
 hasucalc --demo, -d     # Demo sheet with chart settings
 hasucalc --version, -v  # Version (HasuCalc 2.0.2, Go runtime, OS/Arch)
 hasucalc --help, -h     # Help
@@ -335,7 +335,8 @@ Authoritative storage is `.hwk` / `.hwkz`. The following are **tabular interchan
 * **Excel (`.xlsx`)**: multi-sheet cells/formulas/names, etc. **No charts** (§3.9). Not “Excel compatible.”
 * **LibreOffice (`.ods`)**: tabular multi-sheet I/O. **No charts** (§3.9).
 * **CSV (`.csv`)**: writes **UTF-8 BOM** (`0xEF, 0xBB, 0xBF`) to reduce mojibake in other apps.
-* **Markdown (`.md`)**: GitHub Flavored Markdown tables.
+* **Markdown (`.md`)**: GitHub Flavored Markdown table **export**, and **import** of `.md` / `.markdown` where GFM pipe tables become grid cells and other lines become column-A labels.
+* **HTML (`.html` / `.htm`)**: **Import** only — `<table>` grids become cells; headings/paragraphs/list items become labels. Not a full browser HTML engine.
 
 ---
 
