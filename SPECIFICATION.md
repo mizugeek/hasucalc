@@ -105,7 +105,8 @@ Excel function names are canonical; Lotus aliases are accepted only.
 * Label alignment: `'` left, `"` right, `^` center; fill with `\`.
 * Currency: **any** per-cell prefix string (no whitelist: `$` / `¥` / `€` / `£` / `USD `, …). Empty → `$`. No suffix currencies or locale grouping like `1.234,56`.
 * Whole-column / huge ranges are clipped to the **used range**.
-* TUI (tcell), slash menus, `Ctrl+K` palette, Markdown export.
+* TUI (tcell), slash menus, `Ctrl+K` palette, Markdown table export.
+* **Markdown / HTML import** (convenience bridge): GFM pipe tables and HTML `<table>` become grid cells; other document text becomes column-A labels (§3.10).
 * `%` is a percent **only immediately after a numeric literal** (`50%` → 0.5). `=A1%` is not accepted as a formula.
 * In MANUAL recalc, insert/delete updates formula text but display values wait for the next recalc.
 
@@ -132,10 +133,11 @@ hasucalc/
 ├── coord/                # Addresses & ranges (A1, A1:B10, A1..B10, Sheet1!A1)
 ├── cell/                 # Types, values, display formats (currency, %, date, scientific)
 ├── formula/              # Lexer / Parser / AST / Evaluator / builtins
-├── sheet/                # Sheets, workbook, I/O (hwk/hwkz/xlsx/ods/csv/markdown)
+├── sheet/                # Sheets, workbook, I/O (hwk/hwkz/xlsx/ods/csv/markdown/html)
 │   ├── sheet.go
 │   ├── workbook.go
 │   ├── xlsx.go / export_xlsx.go / export_ods.go / export_markdown.go
+│   ├── import_markup.go  # Markdown / HTML import (tables → grid, prose → labels)
 │   └── ods.go
 ├── tui/                  # Terminal UI, palette, menus, charts, typography
 ├── engine_test.go        # Integration / regression tests
@@ -335,8 +337,13 @@ Authoritative storage is `.hwk` / `.hwkz`. The following are **tabular interchan
 * **Excel (`.xlsx`)**: multi-sheet cells/formulas/names, etc. **No charts** (§3.9). Not “Excel compatible.”
 * **LibreOffice (`.ods`)**: tabular multi-sheet I/O. **No charts** (§3.9).
 * **CSV (`.csv`)**: writes **UTF-8 BOM** (`0xEF, 0xBB, 0xBF`) to reduce mojibake in other apps.
-* **Markdown (`.md`)**: GitHub Flavored Markdown table **export**, and **import** of `.md` / `.markdown` where GFM pipe tables become grid cells and other lines become column-A labels.
-* **HTML (`.html` / `.htm`)**: **Import** only — `<table>` grids become cells; headings/paragraphs/list items become labels. Not a full browser HTML engine.
+* **Markdown (`.md` / `.markdown`)**:
+  * **Export**: GFM pipe table from the sheet or a range (`/FX` → Markdown).
+  * **Import** (CLI path or Open dialog): GFM `| ... |` tables become multi-column cells (separator rows like `|---|` are skipped). Non-table lines (headings, paragraphs, fenced code lines, etc.) become **labels in column A**. Prose is forced to LABEL so text that looks like `=SUM(...)` is not evaluated. Inline emphasis/links are simplified to plain text. Not a full CommonMark/GFM engine.
+* **HTML (`.html` / `.htm`)**:
+  * **Import only** (CLI path or Open dialog): each `<table>` becomes a grid block; block text from headings / paragraphs / list items / etc. becomes column-A labels. Nested markup inside cells is flattened to text. Scripts/styles/comments are ignored. Not a browser HTML engine; malformed or exotic markup may be incomplete.
+
+Opening `.md` / `.html` replaces the current workbook with a single imported sheet and suggests a `.hwk` save name (same pattern as CSV import).
 
 ---
 
@@ -344,6 +351,12 @@ Authoritative storage is `.hwk` / `.hwkz`. The following are **tabular interchan
 
 * Inline editing with yellow block + hardware cursor sync; `←/→`, `Home/End`, `Delete/Backspace`, `Ctrl+U`, `Ctrl+K`.
 * Extension normalization and overwrite confirmation.
+* **Open dialog** (`Ctrl+O` / `/FO` / palette “Open File”): lists directories plus openable files:
+  * Native: `.hwk`, `.hwkz`, `.hwk.gz`, `.json`
+  * Office / text bridges: `.xlsx`, `.xlsm`, `.ods`, `.ots`, `.csv`, `.tsv`
+  * Markup bridges: **`.md`**, **`.markdown`**, **`.html`**, **`.htm`**
+  * Legacy: `.wk3`, `.123` (and `.123.json` where applicable)
+* Selecting a `.md` / `.html` / `.htm` file runs the markup importer (§3.10). Selecting CSV/XLSX/ODS/HWK uses the existing importers/loaders.
 
 ---
 
@@ -378,9 +391,9 @@ HasuCalc 2.0 pins regressions in `engine_test.go`, `mega_test.go`, and `bugfix_r
 
 1. Formula & function evaluation (errors, cross-sheet).
 2. Recalc & circular refs; used-range limits for whole-column refs.
-3. File I/O: compact `.hwk`, gzip `.hwkz`, `.xlsx`, ODS, CSV (UTF-8 BOM).
+3. File I/O: compact `.hwk`, gzip `.hwkz`, `.xlsx`, ODS, CSV (UTF-8 BOM), Markdown/HTML import (tables + prose labels).
 4. PNG export generation / signature checks.
-5. UI: file picker editing, mouse drag, wheel.
+5. UI: file picker editing (including Open listing of `.md` / `.html`), mouse drag, wheel.
 6. Find / replace / goto (including sheet sync and computed values).
 7. Freeze / AutoFill / Transpose / multi-sheet Undo isolation.
 
