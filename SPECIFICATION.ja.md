@@ -409,7 +409,6 @@ Excel リボン語彙に寄せた階層。`Ctrl+K` パレットからも同機�
 * **CSV (`.csv`)**: **UTF-8 BOM（`0xEF, 0xBB, 0xBF`）を自動付与**し、他表計算ソフトで文字化けしにくくする。
 * **Markdown (`.md`)**: GFM 表の**書き出し**に加え、`.md` / `.markdown` の**読み込み**（パイプ表はグリッド、それ以外は A 列ラベル）。
 * **HTML (`.html` / `.htm`)**: **読み込みのみ** — `<table>` をセル化、見出し・段落・リストはラベル。ブラウザ並みの HTML エンジンではない。
-* **Markdown (`.md`) 書き出し**: GitHub Flavored Markdown 表形式出力。
 
 ---
 
