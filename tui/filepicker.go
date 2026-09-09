@@ -32,22 +32,22 @@ type FileEntry struct {
 }
 
 type FilePicker struct {
-	active           bool
-	mode             FilePickerMode
-	title            string
-	currentDir       string
-	entries          []FileEntry
-	selectedIdx      int
-	topIdx           int
-	inputBuffer      []rune
-	cursorPos        int
-	inputActive      bool
-	quitOnSave       bool
-	newOnSave        bool
-	confirmOverwrite bool
-	pendingSavePath  string
-	errorMessage     string
-	typeAhead        string
+	active            bool
+	mode              FilePickerMode
+	title             string
+	currentDir        string
+	entries           []FileEntry
+	selectedIdx       int
+	topIdx            int
+	inputBuffer       []rune
+	cursorPos         int
+	inputActive       bool
+	quitOnSave        bool
+	newOnSave         bool
+	confirmOverwrite  bool
+	pendingSavePath   string
+	errorMessage      string
+	typeAhead         string
 	lastTypeAheadTime time.Time
 }
 
@@ -100,6 +100,30 @@ func (fp *FilePicker) GetSelectedEntryForTest() FileEntry {
 		return fp.entries[fp.selectedIdx]
 	}
 	return FileEntry{}
+}
+
+// EntriesForTest returns a copy of the current directory listing (for tests).
+func (fp *FilePicker) EntriesForTest() []FileEntry {
+	out := make([]FileEntry, len(fp.entries))
+	copy(out, fp.entries)
+	return out
+}
+
+// isOpenableWorksheetName reports whether Open dialog should list this file.
+func isOpenableWorksheetName(name string) bool {
+	lower := strings.ToLower(name)
+	ext := filepath.Ext(lower)
+	switch ext {
+	case ".hwk", ".hwkz", ".json", ".csv", ".tsv",
+		".xlsx", ".xlsm", ".ods", ".ots",
+		".md", ".markdown", ".html", ".htm",
+		".wk3", ".123":
+		return true
+	}
+	if strings.HasSuffix(lower, ".hwk.gz") || strings.HasSuffix(lower, ".123.json") {
+		return true
+	}
+	return ext == ".gz" && strings.Contains(lower, ".hwk.")
 }
 
 func (fp *FilePicker) isSaveOrExport() bool {
@@ -331,23 +355,27 @@ func (fp *FilePicker) readDirectory() {
 				ModTime: info.ModTime(),
 			})
 		} else {
-			// Extension check
-			ext := strings.ToLower(filepath.Ext(name))
 			match := true
 			switch fp.mode {
 			case FilePickerModeOpen:
-				match = (ext == ".hwk" || ext == ".hwkz" || ext == ".gz" || ext == ".json" || ext == ".csv" || ext == ".tsv" || ext == ".xlsx" || ext == ".xlsm" || ext == ".ods" || ext == ".ots" || ext == ".md" || ext == ".markdown" || ext == ".html" || ext == ".htm" || ext == ".wk3" || ext == ".123" || strings.HasSuffix(name, ".123.json") || strings.HasSuffix(name, ".hwk.gz"))
+				match = isOpenableWorksheetName(name)
 			case FilePickerModeSave:
-				match = (ext == ".hwk" || ext == ".hwkz" || ext == ".gz" || ext == ".json" || strings.HasSuffix(name, ".123.json") || strings.HasSuffix(name, ".hwk.gz"))
+				ext := strings.ToLower(filepath.Ext(name))
+				match = (ext == ".hwk" || ext == ".hwkz" || ext == ".gz" || ext == ".json" || strings.HasSuffix(strings.ToLower(name), ".123.json") || strings.HasSuffix(strings.ToLower(name), ".hwk.gz"))
 			case FilePickerModeImportCSV:
+				ext := strings.ToLower(filepath.Ext(name))
 				match = (ext == ".csv" || ext == ".tsv" || ext == ".txt")
 			case FilePickerModeExportCSV:
+				ext := strings.ToLower(filepath.Ext(name))
 				match = (ext == ".csv")
 			case FilePickerModeExportXLSX:
+				ext := strings.ToLower(filepath.Ext(name))
 				match = (ext == ".xlsx" || ext == ".xlsm")
 			case FilePickerModeExportODS:
+				ext := strings.ToLower(filepath.Ext(name))
 				match = (ext == ".ods" || ext == ".ots")
 			case FilePickerModeExportMarkdown:
+				ext := strings.ToLower(filepath.Ext(name))
 				match = (ext == ".md" || ext == ".markdown")
 			}
 

@@ -61,7 +61,7 @@ func BuildMenuTree() *MenuItem {
 			{
 				Name:          "Open",
 				Key:           "O",
-				Description:   "Open file (.hwk, .xlsx, .ods, .csv, .json)",
+				Description:   "Open file (.hwk, .xlsx, .ods, .csv, .md, .html, .json)",
 				Shortcut:      "Ctrl+O",
 				ActionType:    ActionExecute,
 				ActionHandler: "doFileOpenDialog",

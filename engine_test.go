@@ -2073,6 +2073,40 @@ func TestPasteLinkViaSlashMenu(t *testing.T) {
 	}
 }
 
+func TestFilePickerOpenListsMarkdownAndHTML(t *testing.T) {
+	dir := t.TempDir()
+	for _, name := range []string{"sheet.hwk", "notes.md", "page.html", "ignore.txt", "data.csv"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("x"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	oldWD, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(oldWD) })
+
+	fp := tui.NewFilePicker()
+	fp.Open(tui.FilePickerModeOpen, "")
+	seen := map[string]bool{}
+	for _, e := range fp.EntriesForTest() {
+		if !e.IsDir {
+			seen[e.Name] = true
+		}
+	}
+	for _, want := range []string{"sheet.hwk", "notes.md", "page.html", "data.csv"} {
+		if !seen[want] {
+			t.Fatalf("open dialog missing %q; got %#v", want, seen)
+		}
+	}
+	if seen["ignore.txt"] {
+		t.Fatalf("open dialog should not list .txt")
+	}
+}
+
 func TestFilePickerTypeAhead(t *testing.T) {
 	dir := t.TempDir()
 	for _, name := range []string{"demo_arabic.hwk", "demo_chinese.hwk", "demo_multilingual_all.hwk"} {
