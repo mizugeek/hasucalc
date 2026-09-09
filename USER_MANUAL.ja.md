@@ -180,205 +180,188 @@ CLI（`hasucalc file.md`）または **Ctrl+O**（`.md` / `.html` も一覧に�
 
 ## 9. 関数リファレンス
 
-`@NAME(...)` と、`=` のあとの `NAME(...)` の両方を受け付けます。省略可能な引数は `[角括弧]` です。
+`@NAME(...)` と、`=` のあとの `NAME(...)` の両方を受け付けます。`[角括弧]` は省略可能な引数、末尾の `...` は同じ引数を繰り返せることを示します。
+
+**引数**列に、各パラメータへ何を入れるかを説明しています。
 
 ### 数学・集計 (Math/Agg)
 
-| 関数 | 構文 | 説明 |
-|:---|:---|:---|
-| `SUM` | `SUM(range/list)` | 範囲内の数値の合計を求める |
-| `SUMIF` | `SUMIF(range, criteria, [sum_range])` | 条件に合うセルの合計（例: ">50", "Apple"） |
-| `SUMIFS` | `SUMIFS(sum_rng, crit_rng1, crit1, ...)` | 複数条件を満たすセルの合計 |
-| `SUMPRODUCT` | `SUMPRODUCT(array1, [array2]...)` | 対応する要素の積の合計（積和） |
-| `PRODUCT` | `PRODUCT(number1, [number2]...)` | 引数の数値をすべて掛け合わせる |
-| `SUBTOTAL` | `SUBTOTAL(function_num, ref1, ...)` | リストの小計（9=SUM, 1=AVG など） |
-| `ROUND` | `ROUND(val, num_digits)` | 指定桁に四捨五入 |
-| `ROUNDUP` | `ROUNDUP(val, num_digits)` | ゼロから遠ざかる方向に切り上げ |
-| `ROUNDDOWN` | `ROUNDDOWN(val, num_digits)` | ゼロに近づく方向に切り捨て |
-| `TRUNC` | `TRUNC(val, [num_digits])` | 指定桁で切り捨て（端数削除） |
-| `INT` | `INT(val)` | 小数点以下を切り捨てて整数にする |
-| `ABS` | `ABS(val)` | 絶対値を返す |
-| `MOD` | `MOD(number, divisor)` | 除算の余り（剰余） |
-| `QUOTIENT` | `QUOTIENT(numerator, denominator)` | 割り算の整数部分 |
-| `SIGN` | `SIGN(number)` | 符号（正=1, 負=-1, 0=0） |
-| `POWER` | `POWER(number, power)` | 累乗（x^y） |
-| `SQRT` | `SQRT(val)` | 正の数の平方根 |
-| `EXP` | `EXP(number)` | e の累乗 |
-| `LN` | `LN(number)` | 自然対数 |
-| `LOG` | `LOG(number, [base])` | 指定底の対数（省略時は10） |
-| `LOG10` | `LOG10(number)` | 常用対数（底10） |
-| `CEILING` | `CEILING(number, significance)` | 基準値の倍数へ切り上げ |
-| `FLOOR` | `FLOOR(number, significance)` | 基準値の倍数へ切り下げ |
-| `MROUND` | `MROUND(number, multiple)` | 指定倍数の最も近い値へ丸める |
-| `FACT` | `FACT(number)` | 階乗（n!） |
-| `GCD` | `GCD(number1, number2, ...)` | 最大公約数 |
-| `LCM` | `LCM(number1, number2, ...)` | 最小公倍数 |
-| `COMBIN` | `COMBIN(n, k)` | 組み合わせの数（nCr） |
-| `PERMUT` | `PERMUT(n, k)` | 順列の数（nPr） |
-| `PI` | `PI()` | 円周率 π |
-| `DEGREES` | `DEGREES(angle_in_radians)` | ラジアンを度に変換 |
-| `RADIANS` | `RADIANS(angle_in_degrees)` | 度をラジアンに変換 |
-| `SIN` | `SIN(number)` | 正弦（ラジアン） |
-| `COS` | `COS(number)` | 余弦（ラジアン） |
-| `TAN` | `TAN(number)` | 正接（ラジアン） |
-| `ASIN` | `ASIN(number)` | 逆正弦（ラジアン） |
-| `ACOS` | `ACOS(number)` | 逆余弦（ラジアン） |
-| `ATAN` | `ATAN(number)` | 逆正接（ラジアン） |
-| `ATAN2` | `ATAN2(x_num, y_num)` | 座標から逆正接 |
-| `RAND` | `RAND()` | 0以上1未満の乱数 |
-| `RANDBETWEEN` | `RANDBETWEEN(min, max)` | min〜max の整数乱数（両端含む） |
+| 関数 | 構文 | 引数 | 概要 |
+|:---|:---|:---|:---|
+| `SUM` | `SUM(range/list)` | `range/list`: セル範囲および／または個々の数値 | 範囲内の数値の合計を求める |
+| `SUMIF` | `SUMIF(range, criteria, [sum_range])` | `range`: セル範囲<br>`criteria`: 条件（例: ">50", "Apple", セル参照）<br>`sum_range`（省略可）: 合計するセル（省略時は range と同じ） | 条件に合うセルの合計（例: ">50", "Apple"） |
+| `SUMIFS` | `SUMIFS(sum_rng, crit_rng1, crit1, ...)` | `sum_rng`: 条件一致時に合計するセル<br>`crit_rng1`: 1つ目の条件範囲（関連範囲と同形）<br>`crit1`: 1つ目の条件値／式<br>`array2`（繰り返し可）: 追加の範囲／配列（形は揃える） | 対応する要素の積の合計（積和） |
+| `PRODUCT` | `PRODUCT(number1, [number2]...)` | `number1`: 1つ目の数値<br>`number2`（繰り返し可）: 追加の数値 | 引数の数値をすべて掛け合わせる |
+| `SUBTOTAL` | `SUBTOTAL(function_num, ref1, ...)` | `function_num`: SUBTOTAL の集計番号（1=AVG, 2=COUNT, 9=SUM など）<br>`ref1`: SUBTOTAL の1つ目の参照<br>よく使う function_num: 1 AVG, 2 COUNT, 3 COUNTA, 4 MAX, 5 MIN, 6 PRODUCT, 7 STDEV, 9 SUM, 10 VAR。 | リストの小計（9=SUM, 1=AVG など） |
+| `ROUND` | `ROUND(val, num_digits)` | `val`: 判定・変換する値<br>`num_digits`: 小数点以下桁数 | 指定桁に四捨五入 |
+| `ROUNDUP` | `ROUNDUP(val, num_digits)` | `val`: 判定・変換する値<br>`num_digits`: 小数点以下桁数 | ゼロから遠ざかる方向に切り上げ |
+| `ROUNDDOWN` | `ROUNDDOWN(val, num_digits)` | `val`: 判定・変換する値<br>`num_digits`: 小数点以下桁数 | ゼロに近づく方向に切り捨て |
+| `TRUNC` | `TRUNC(val, [num_digits])` | `val`: 判定・変換する値<br>`num_digits`（省略可）: 小数点以下桁数 | 指定桁で切り捨て（端数削除） |
+| `INT` | `INT(val)` | `val`: 判定・変換する値 | 小数点以下を切り捨てて整数にする |
+| `ABS` | `ABS(val)` | `val`: 判定・変換する値 | 絶対値を返す |
+| `MOD` | `MOD(number, divisor)` | `number`: 数値<br>`divisor`: 割る数 | 除算の余り（剰余） |
+| `QUOTIENT` | `QUOTIENT(numerator, denominator)` | `numerator`: 割られる数<br>`denominator`: 割る数 | 割り算の整数部分 |
+| `SIGN` | `SIGN(number)` | `number`: 数値 | 符号（正=1, 負=-1, 0=0） |
+| `POWER` | `POWER(number, power)` | `number`: 数値<br>`power`: 指数 | 累乗（x^y） |
+| `SQRT` | `SQRT(val)` | `val`: 判定・変換する値 | 正の数の平方根 |
+| `EXP` | `EXP(number)` | `number`: 数値 | e の累乗 |
+| `LN` | `LN(number)` | `number`: 数値 | 自然対数 |
+| `LOG` | `LOG(number, [base])` | `number`: 数値<br>`base`（省略可）: 対数の底（省略時は10） | 指定底の対数（省略時は10） |
+| `LOG10` | `LOG10(number)` | `number`: 数値 | 常用対数（底10） |
+| `CEILING` | `CEILING(number, significance)` | `number`: 数値<br>`significance`: 丸めの基準となる間隔 | 基準値の倍数へ切り上げ |
+| `FLOOR` | `FLOOR(number, significance)` | `number`: 数値<br>`significance`: 丸めの基準となる間隔 | 基準値の倍数へ切り下げ |
+| `MROUND` | `MROUND(number, multiple)` | `number`: 数値<br>`multiple`: 丸め先の倍数 | 指定倍数の最も近い値へ丸める |
+| `FACT` | `FACT(number)` | `number`: 数値 | 階乗（n!） |
+| `GCD` | `GCD(number1, number2, ...)` | `number1`: 1つ目の数値<br>`number2`: 追加の数値<br>`number2`: 追加の数値<br>`k`: 順位や割合など（関数により意味が異なる） | 組み合わせの数（nCr） |
+| `PERMUT` | `PERMUT(n, k)` | `n`: 総数／期数など（関数による）<br>`k`: 順位や割合など（関数により意味が異なる） | 順列の数（nPr） |
+| `PI` | `PI()` | （引数なし） | 円周率 π |
+| `DEGREES` | `DEGREES(angle_in_radians)` | `angle_in_radians`: ラジアン単位の角度 | ラジアンを度に変換 |
+| `RADIANS` | `RADIANS(angle_in_degrees)` | `angle_in_degrees`: 度単位の角度 | 度をラジアンに変換 |
+| `SIN` | `SIN(number)` | `number`: 数値 | 正弦（ラジアン） |
+| `COS` | `COS(number)` | `number`: 数値 | 余弦（ラジアン） |
+| `TAN` | `TAN(number)` | `number`: 数値 | 正接（ラジアン） |
+| `ASIN` | `ASIN(number)` | `number`: 数値 | 逆正弦（ラジアン） |
+| `ACOS` | `ACOS(number)` | `number`: 数値 | 逆余弦（ラジアン） |
+| `ATAN` | `ATAN(number)` | `number`: 数値 | 逆正接（ラジアン） |
+| `ATAN2` | `ATAN2(x_num, y_num)` | `x_num`: X 座標<br>`y_num`: Y 座標 | 座標から逆正接 |
+| `RAND` | `RAND()` | （引数なし） | 0以上1未満の乱数 |
+| `RANDBETWEEN` | `RANDBETWEEN(min, max)` | `min`: 最小整数（含む）<br>`max`: 最大整数（含む） | min〜max の整数乱数（両端含む） |
 
 ### 統計 (Statistical)
 
-| 関数 | 構文 | 説明 |
-|:---|:---|:---|
-| `AVG` | `AVG(range/list)` | 算術平均 |
-| `AVERAGEIF` | `AVERAGEIF(range, criteria, [avg_range])` | 条件に合うセルの平均 |
-| `AVERAGEIFS` | `AVERAGEIFS(avg_rng, crit_rng1, crit1, ...)` | 複数条件を満たすセルの平均 |
-| `COUNT` | `COUNT(range/list)` | 数値が入ったセルの個数 |
-| `COUNTA` | `COUNTA(range/list)` | 空白でないセルの個数 |
-| `COUNTBLANK` | `COUNTBLANK(range)` | 空白セルの個数 |
-| `COUNTIF` | `COUNTIF(range, criteria)` | 条件に合うセルの個数 |
-| `COUNTIFS` | `COUNTIFS(crit_rng1, crit1, ...)` | 複数条件を満たすセルの個数 |
-| `MIN` | `MIN(range/list)` | 最小値 |
-| `MINIFS` | `MINIFS(min_rng, crit_rng1, crit1, ...)` | 複数条件を満たす中の最小値 |
-| `MAX` | `MAX(range/list)` | 最大値 |
-| `MAXIFS` | `MAXIFS(max_rng, crit_rng1, crit1, ...)` | 複数条件を満たす中の最大値 |
-| `MEDIAN` | `MEDIAN(range/list)` | 中央値（メディアン） |
-| `MODE` | `MODE(range/list)` | 最頻値（モード） |
-| `LARGE` | `LARGE(array, k)` | k 番目に大きい値 |
-| `SMALL` | `SMALL(array, k)` | k 番目に小さい値 |
-| `PERCENTILE` | `PERCENTILE(array, k)` | 百分位数（k は 0〜1） |
-| `QUARTILE` | `QUARTILE(array, quart)` | 四分位数（0〜4） |
-| `STDEV` | `STDEV(range/list)` | 標本標準偏差（n-1） |
-| `STDEVP` | `STDEVP(range/list)` | 母標準偏差（n） |
-| `VAR` | `VAR(range/list)` | 標本分散（n-1） |
-| `VARP` | `VARP(range/list)` | 母分散（n） |
-| `RANK` | `RANK(num, range, [order])` | 順位（0=降順, 1=昇順） |
+| 関数 | 構文 | 引数 | 概要 |
+|:---|:---|:---|:---|
+| `AVG` | `AVG(range/list)` | `range/list`: セル範囲および／または個々の数値 | 算術平均 |
+| `AVERAGEIF` | `AVERAGEIF(range, criteria, [avg_range])` | `range`: セル範囲<br>`criteria`: 条件（例: ">50", "Apple", セル参照）<br>`avg_range`（省略可）: 平均するセル（省略時は range と同じ） | 条件に合うセルの平均 |
+| `AVERAGEIFS` | `AVERAGEIFS(avg_rng, crit_rng1, crit1, ...)` | `avg_rng`: 平均を取るセル範囲<br>`crit_rng1`: 1つ目の条件範囲（関連範囲と同形）<br>`crit1`: 1つ目の条件値／式<br>`criteria`: 条件（例: ">50", "Apple", セル参照） | 条件に合うセルの個数 |
+| `COUNTIFS` | `COUNTIFS(crit_rng1, crit1, ...)` | `crit_rng1`: 1つ目の条件範囲（関連範囲と同形）<br>`crit1`: 1つ目の条件値／式<br>`crit_rng1`: 1つ目の条件範囲（関連範囲と同形）<br>`crit1`: 1つ目の条件値／式<br>`crit_rng1`: 1つ目の条件範囲（関連範囲と同形）<br>`crit1`: 1つ目の条件値／式<br>`k`: 順位や割合など（関数により意味が異なる）<br>k=1 が最大値。 | k 番目に大きい値 |
+| `SMALL` | `SMALL(array, k)` | `array`: セル範囲または値の並び<br>`k`: 順位や割合など（関数により意味が異なる）<br>k=1 が最小値。 | k 番目に小さい値 |
+| `PERCENTILE` | `PERCENTILE(array, k)` | `array`: セル範囲または値の並び<br>`k`: 順位や割合など（関数により意味が異なる）<br>k は0〜1（0%=最小、1=最大）。 | 百分位数（k は 0〜1） |
+| `QUARTILE` | `QUARTILE(array, quart)` | `array`: セル範囲または値の並び<br>`quart`: 四分位番号（0–4） | 四分位数（0〜4） |
+| `STDEV` | `STDEV(range/list)` | `range/list`: セル範囲および／または個々の数値 | 標本標準偏差（n-1） |
+| `STDEVP` | `STDEVP(range/list)` | `range/list`: セル範囲および／または個々の数値 | 母標準偏差（n） |
+| `VAR` | `VAR(range/list)` | `range/list`: セル範囲および／または個々の数値 | 標本分散（n-1） |
+| `VARP` | `VARP(range/list)` | `range/list`: セル範囲および／または個々の数値 | 母分散（n） |
+| `RANK` | `RANK(num, range, [order])` | `num`: 順位を求める数値<br>`range`: セル範囲<br>`order`（省略可）: 0=降順順位、1=昇順（省略可）<br>order 省略または0は降順ソート相当の順位。 | 順位（0=降順, 1=昇順） |
 
 ### 検索・参照 (Lookup/Ref)
 
-| 関数 | 構文 | 説明 |
-|:---|:---|:---|
-| `XLOOKUP` | `XLOOKUP(key, lk_rng, ret_rng, [fallback], [match], [search])` | 縦横対応の検索（正確／近似）と見つからないときの値 |
-| `VLOOKUP` | `VLOOKUP(key, table_range, col_offset, [exact])` | 左端列を検索し、指定列の値を返す |
-| `HLOOKUP` | `HLOOKUP(key, table_range, row_offset, [exact])` | 最上行を検索し、指定行の値を返す |
-| `LOOKUP` | `LOOKUP(val, lookup_vector, [result_vector])` | 1行または1列の範囲で検索 |
-| `INDEX` | `INDEX(range, col_offset, row_offset)` | 交差位置のセル値（オフセットは0始まり） |
-| `MATCH` | `MATCH(key, lookup_array, [match_type])` | 一致位置（1始まり） |
-| `XMATCH` | `XMATCH(key, lookup_array, [match_mode], [search_mode])` | 位置検索（完全一致・ワイルドカード・逆方向） |
-| `OFFSET` | `OFFSET(ref, rows, cols, [height], [width])` | 起点からずらした参照を返す |
-| `CHOOSE` | `CHOOSE(index, val0, val1, val2...)` | 0始まりの番号でリストから値を選ぶ |
-| `ROW` | `ROW([cell])` | 行番号（1始まり） |
-| `COLUMN` | `COLUMN([cell])` | 列番号（1始まり） |
-| `ROWS` | `ROWS(range)` | 範囲の行数 |
-| `COLUMNS` | `COLUMNS(range)` | 範囲の列数 |
-| `TRANSPOSE` | `TRANSPOSE(array)` | 行列を入れ替える |
+| 関数 | 構文 | 引数 | 概要 |
+|:---|:---|:---|:---|
+| `XLOOKUP` | `XLOOKUP(key, lk_rng, ret_rng, [fallback], [match], [search])` | `key`: 検索キー<br>`lk_rng`: キーを探す範囲<br>`ret_rng`: 一致時に返す値の範囲<br>`fallback`（省略可）: 見つからないときに返す値<br>`match`（省略可）: XLOOKUP の一致モード（省略可）<br>`search`（省略可）: XLOOKUP の検索方向など（省略可） | 縦横対応の検索（正確／近似）と見つからないときの値 |
+| `VLOOKUP` | `VLOOKUP(key, table_range, col_offset, [exact])` | `key`: 検索キー<br>`table_range`: 検索テーブル全体の範囲<br>`col_offset`: 範囲内の列オフセット（INDEX は0始まり）<br>`exact`（省略可）: TRUE/1=完全一致、FALSE/0=近似（要ソート） | 左端列を検索し、指定列の値を返す |
+| `HLOOKUP` | `HLOOKUP(key, table_range, row_offset, [exact])` | `key`: 検索キー<br>`table_range`: 検索テーブル全体の範囲<br>`row_offset`: 範囲内の行オフセット（INDEX は0始まり）<br>`exact`（省略可）: TRUE/1=完全一致、FALSE/0=近似（要ソート） | 最上行を検索し、指定行の値を返す |
+| `LOOKUP` | `LOOKUP(val, lookup_vector, [result_vector])` | `val`: 判定・変換する値<br>`lookup_vector`: 検索用の行／列<br>`result_vector`（省略可）: 返す値の並行範囲（省略可） | 1行または1列の範囲で検索 |
+| `INDEX` | `INDEX(range, col_offset, row_offset)` | `range`: セル範囲<br>`col_offset`: 範囲内の列オフセット（INDEX は0始まり）<br>`row_offset`: 範囲内の行オフセット（INDEX は0始まり）<br>注意: col_offset / row_offset は HasuCalc では0始まりです。 | 交差位置のセル値（オフセットは0始まり） |
+| `MATCH` | `MATCH(key, lookup_array, [match_type])` | `key`: 検索キー<br>`lookup_array`: 検索する1行または1列の範囲<br>`match_type`（省略可）: MATCH の一致種類（1/0/-1、省略可）<br>match_type: 1=key以下の最大（昇順）, 0=完全一致, -1=key以上の最小（降順）。 | 一致位置（1始まり） |
+| `XMATCH` | `XMATCH(key, lookup_array, [match_mode], [search_mode])` | `key`: 検索キー<br>`lookup_array`: 検索する1行または1列の範囲<br>`match_mode`（省略可）: 完全／ワイルドカード／近似など（省略可）<br>`search_mode`（省略可）: 検索方向／モード（省略可） | 位置検索（完全一致・ワイルドカード・逆方向） |
+| `OFFSET` | `OFFSET(ref, rows, cols, [height], [width])` | `ref`: 起点となるセルまたは範囲<br>`rows`: 起点から下（負なら上）へずらす行数<br>`cols`: 起点から右（負なら左）へずらす列数<br>`height`（省略可）: 返す範囲の行数（省略可）<br>`width`（省略可）: 返す範囲の列数（省略可） | 起点からずらした参照を返す |
+| `CHOOSE` | `CHOOSE(index, val0, val1, val2...)` | `index`: 値リストの番号（CHOOSE は0始まり）<br>`val0`: 選択肢の先頭（index=0）<br>`val1`: リスト上の値／選択肢<br>`val2`（繰り返し可）: 追加の値<br>注意: index は0始まり（先頭の値は index 0）。 | 0始まりの番号でリストから値を選ぶ |
+| `ROW` | `ROW([cell])` | `cell`（省略可）: セル参照（省略時はこの数式セル自身） | 行番号（1始まり） |
+| `COLUMN` | `COLUMN([cell])` | `cell`（省略可）: セル参照（省略時はこの数式セル自身） | 列番号（1始まり） |
+| `ROWS` | `ROWS(range)` | `range`: セル範囲 | 範囲の行数 |
+| `COLUMNS` | `COLUMNS(range)` | `range`: セル範囲 | 範囲の列数 |
+| `TRANSPOSE` | `TRANSPOSE(array)` | `array`: セル範囲または値の並び | 行列を入れ替える |
 
 ### 論理・エラー (Logic/Error)
 
-| 関数 | 構文 | 説明 |
-|:---|:---|:---|
-| `IF` | `IF(condition, true_val, false_val)` | 条件分岐（真／偽の値） |
-| `IFS` | `IFS(cond1, val1, [cond2, val2]...)` | 条件を順に評価する多岐分岐 |
-| `SWITCH` | `SWITCH(expr, val1, res1, [val2, res2]..., [default])` | 式を値リストと照合して分岐 |
-| `AND` | `AND(logical1, [logical2], ...)` | すべて真なら真 |
-| `OR` | `OR(logical1, [logical2], ...)` | どれか真なら真 |
-| `NOT` | `NOT(logical)` | 論理値を反転 |
-| `XOR` | `XOR(logical1, [logical2]...)` | 排他的論理和（XOR） |
-| `IFERROR` | `IFERROR(formula, fallback_val)` | エラー時に代替値を返す |
-| `IFNA` | `IFNA(formula, fallback_val)` | NA のとき代替値を返す |
-| `ISNUMBER` | `ISNUMBER(val)` | 数値かどうか（1/0） |
-| `ISSTRING` | `ISSTRING(val)` | 文字列かどうか（1/0） |
-| `ISTEXT` | `ISTEXT(val)` | 文字列かどうか（1/0） |
-| `ISNONTEXT` | `ISNONTEXT(val)` | 文字列でないか（1/0） |
-| `ISBLANK` | `ISBLANK(val)` | 空白セルかどうか |
-| `ISLOGICAL` | `ISLOGICAL(val)` | 真偽値かどうか |
-| `ISERR` | `ISERR(val)` | ERR かどうか（NA は含まない、1/0） |
-| `ISNA` | `ISNA(val)` | NA かどうか（1/0） |
-| `ISEVEN` | `ISEVEN(number)` | 偶数かどうか（1/0） |
-| `ISODD` | `ISODD(number)` | 奇数かどうか（1/0） |
-| `TRUE` | `TRUE()` | 真を返す |
-| `FALSE` | `FALSE()` | 偽を返す |
-| `N` | `N(value)` | 数値に変換 |
-| `T` | `T(value)` | 文字列ならそのまま、それ以外は空文字 |
-| `TYPE` | `TYPE(value)` | 型コード（1=数値, 2=文字 など） |
+| 関数 | 構文 | 引数 | 概要 |
+|:---|:---|:---|:---|
+| `IF` | `IF(condition, true_val, false_val)` | `condition`: 論理条件（真／偽）<br>`true_val`: 条件が真のときの結果<br>`false_val`: 条件が偽のときの結果 | 条件分岐（真／偽の値） |
+| `IFS` | `IFS(cond1, val1, [cond2, val2]...)` | `cond1`: 1つ目の条件（真／偽）<br>`val1`: リスト上の値／選択肢<br>`cond2`: 次の条件<br>`val2`（繰り返し可）: 追加の値 | 条件を順に評価する多岐分岐 |
+| `SWITCH` | `SWITCH(expr, val1, res1, [val2, res2]..., [default])` | `expr`: 照合する値<br>`val1`: リスト上の値／選択肢<br>`res1`: expr が val1 のときの結果<br>`val2`: 追加の値<br>`res2`（繰り返し可）: expr が val2 のときの結果<br>`default`（省略可）: どれにも一致しないときの値 | 式を値リストと照合して分岐 |
+| `AND` | `AND(logical1, [logical2], ...)` | `logical1`: 1つ目の論理値<br>`logical2`（省略可）: 追加の論理値<br>`logical2`（省略可）: 追加の論理値<br>`logical2`（繰り返し可）: 追加の論理値 | 排他的論理和（XOR） |
+| `IFERROR` | `IFERROR(formula, fallback_val)` | `formula`: 評価する式または参照<br>`fallback_val`: エラー／NA のときに返す値 | エラー時に代替値を返す |
+| `IFNA` | `IFNA(formula, fallback_val)` | `formula`: 評価する式または参照<br>`fallback_val`: エラー／NA のときに返す値 | NA のとき代替値を返す |
+| `ISNUMBER` | `ISNUMBER(val)` | `val`: 判定・変換する値 | 数値かどうか（1/0） |
+| `ISSTRING` | `ISSTRING(val)` | `val`: 判定・変換する値 | 文字列かどうか（1/0） |
+| `ISTEXT` | `ISTEXT(val)` | `val`: 判定・変換する値 | 文字列かどうか（1/0） |
+| `ISNONTEXT` | `ISNONTEXT(val)` | `val`: 判定・変換する値 | 文字列でないか（1/0） |
+| `ISBLANK` | `ISBLANK(val)` | `val`: 判定・変換する値 | 空白セルかどうか |
+| `ISLOGICAL` | `ISLOGICAL(val)` | `val`: 判定・変換する値 | 真偽値かどうか |
+| `ISERR` | `ISERR(val)` | `val`: 判定・変換する値 | ERR かどうか（NA は含まない、1/0） |
+| `ISNA` | `ISNA(val)` | `val`: 判定・変換する値 | NA かどうか（1/0） |
+| `ISEVEN` | `ISEVEN(number)` | `number`: 数値 | 偶数かどうか（1/0） |
+| `ISODD` | `ISODD(number)` | `number`: 数値 | 奇数かどうか（1/0） |
+| `TRUE` | `TRUE()` | （引数なし） | 真を返す |
+| `FALSE` | `FALSE()` | （引数なし） | 偽を返す |
+| `N` | `N(value)` | `value`: 変換・書式化する値 | 数値に変換 |
+| `T` | `T(value)` | `value`: 変換・書式化する値 | 文字列ならそのまま、それ以外は空文字 |
+| `TYPE` | `TYPE(value)` | `value`: 変換・書式化する値 | 型コード（1=数値, 2=文字 など） |
 
 ### 文字列 (Text)
 
-| 関数 | 構文 | 説明 |
-|:---|:---|:---|
-| `TEXT` | `TEXT(value, format_string)` | 書式文字列で数値・日付を文字列化（例: "yyyy/mm/dd"） |
-| `TRIM` | `TRIM(text)` | 前後の空白除去と内部空白の整理 |
-| `CLEAN` | `CLEAN(text)` | 印刷不能文字を除去 |
-| `SUBSTITUTE` | `SUBSTITUTE(text, old_text, new_text, [instance])` | 部分文字列を置換 |
-| `REPLACE` | `REPLACE(old_text, start_pos, num_chars, new_text)` | 位置を指定して文字を置換 |
-| `REPT` | `REPT(text, number_times)` | 文字列を指定回数繰り返す |
-| `UPPER` | `UPPER(text)` | 英字を大文字に |
-| `LOWER` | `LOWER(text)` | 英字を小文字に |
-| `PROPER` | `PROPER(text)` | 単語先頭を大文字に（Title Case） |
-| `EXACT` | `EXACT(text1, text2)` | 完全一致比較（大文字小文字を区別） |
-| `CHAR` | `CHAR(number)` | コード番号に対応する文字 |
-| `CODE` | `CODE(text)` | 先頭文字のコード番号 |
-| `UNICHAR` | `UNICHAR(number)` | Unicode コードポイントの文字 |
-| `UNICODE` | `UNICODE(text)` | 先頭文字の Unicode コードポイント |
-| `CONCATENATE` | `CONCATENATE(text1, text2, ...)` | 複数文字列を連結 |
-| `CONCAT` | `CONCAT(text1, text2, ...)` | 文字列や範囲を連結 |
-| `TEXTJOIN` | `TEXTJOIN(delimiter, ignore_empty, text1, ...)` | 区切り文字付きで連結（空無視オプションあり） |
-| `LEFT` | `LEFT(text, num_chars)` | 左から指定文字数を取り出す |
-| `RIGHT` | `RIGHT(text, num_chars)` | 右から指定文字数を取り出す |
-| `MID` | `MID(text, start_pos, num_chars)` | 途中から指定文字数を取り出す |
-| `LEN` | `LEN(text)` | 文字数 |
-| `FIND` | `FIND(find_text, within_text, [start])` | 大文字小文字を区別して位置検索（1始まり） |
-| `SEARCH` | `SEARCH(find_text, within_text, [start])` | 大文字小文字無視・ワイルドカード対応の位置検索 |
-| `STRING` | `STRING(number, decimal_places)` | 小数桁固定で数値を文字列化（Lotus 系） |
-| `VALUE` | `VALUE(text)` | 通貨記号・カンマ付き文字列を数値に |
-| `NUMBERVALUE` | `NUMBERVALUE(text, [dec_sep], [group_sep])` | 小数点・桁区切りを指定して数値化 |
-| `TEXTBEFORE` | `TEXTBEFORE(text, delimiter)` | 区切りより前の文字列 |
-| `TEXTAFTER` | `TEXTAFTER(text, delimiter)` | 区切りより後の文字列 |
-| `TEXTSPLIT` | `TEXTSPLIT(text, col_delimiter)` | 区切りで分割 |
+| 関数 | 構文 | 引数 | 概要 |
+|:---|:---|:---|:---|
+| `TEXT` | `TEXT(value, format_string)` | `value`: 変換・書式化する値<br>`format_string`: 表示書式（例: "yyyy/mm/dd", "#,##0.00"） | 書式文字列で数値・日付を文字列化（例: "yyyy/mm/dd"） |
+| `TRIM` | `TRIM(text)` | `text`: 文字列 | 前後の空白除去と内部空白の整理 |
+| `CLEAN` | `CLEAN(text)` | `text`: 文字列 | 印刷不能文字を除去 |
+| `SUBSTITUTE` | `SUBSTITUTE(text, old_text, new_text, [instance])` | `text`: 文字列<br>`old_text`: 元の文字列／探す部分文字列<br>`new_text`: 置き換え後の文字列<br>`instance`（省略可）: 何番目の出現を置換するか（省略時はすべて） | 部分文字列を置換 |
+| `REPLACE` | `REPLACE(old_text, start_pos, num_chars, new_text)` | `old_text`: 元の文字列／探す部分文字列<br>`start_pos`: 開始文字位置（1始まり）<br>`num_chars`: 取り出す文字数<br>`new_text`: 置き換え後の文字列 | 位置を指定して文字を置換 |
+| `REPT` | `REPT(text, number_times)` | `text`: 文字列<br>`number_times`: 繰り返す回数 | 文字列を指定回数繰り返す |
+| `UPPER` | `UPPER(text)` | `text`: 文字列 | 英字を大文字に |
+| `LOWER` | `LOWER(text)` | `text`: 文字列 | 英字を小文字に |
+| `PROPER` | `PROPER(text)` | `text`: 文字列 | 単語先頭を大文字に（Title Case） |
+| `EXACT` | `EXACT(text1, text2)` | `text1`: 1つ目の文字列<br>`text2`: 追加の文字列 | 完全一致比較（大文字小文字を区別） |
+| `CHAR` | `CHAR(number)` | `number`: 数値 | コード番号に対応する文字 |
+| `CODE` | `CODE(text)` | `text`: 文字列 | 先頭文字のコード番号 |
+| `UNICHAR` | `UNICHAR(number)` | `number`: 数値 | Unicode コードポイントの文字 |
+| `UNICODE` | `UNICODE(text)` | `text`: 文字列 | 先頭文字の Unicode コードポイント |
+| `CONCATENATE` | `CONCATENATE(text1, text2, ...)` | `text1`: 1つ目の文字列<br>`text2`: 追加の文字列<br>`text2`: 追加の文字列<br>`ignore_empty`: TRUE なら空要素を連結から除く<br>`text1`: 1つ目の文字列<br>ignore_empty は1/TRUEで空をスキップ。 | 区切り文字付きで連結（空無視オプションあり） |
+| `LEFT` | `LEFT(text, num_chars)` | `text`: 文字列<br>`num_chars`: 取り出す文字数 | 左から指定文字数を取り出す |
+| `RIGHT` | `RIGHT(text, num_chars)` | `text`: 文字列<br>`num_chars`: 取り出す文字数 | 右から指定文字数を取り出す |
+| `MID` | `MID(text, start_pos, num_chars)` | `text`: 文字列<br>`start_pos`: 開始文字位置（1始まり）<br>`num_chars`: 取り出す文字数 | 途中から指定文字数を取り出す |
+| `LEN` | `LEN(text)` | `text`: 文字列 | 文字数 |
+| `FIND` | `FIND(find_text, within_text, [start])` | `find_text`: 探す文字列<br>`within_text`: 検索対象の文字列<br>`start`（省略可）: 検索開始位置（1始まり、省略可） | 大文字小文字を区別して位置検索（1始まり） |
+| `SEARCH` | `SEARCH(find_text, within_text, [start])` | `find_text`: 探す文字列<br>`within_text`: 検索対象の文字列<br>`start`（省略可）: 検索開始位置（1始まり、省略可） | 大文字小文字無視・ワイルドカード対応の位置検索 |
+| `STRING` | `STRING(number, decimal_places)` | `number`: 数値<br>`decimal_places`: 小数点以下の桁数 | 小数桁固定で数値を文字列化（Lotus 系） |
+| `VALUE` | `VALUE(text)` | `text`: 文字列 | 通貨記号・カンマ付き文字列を数値に |
+| `NUMBERVALUE` | `NUMBERVALUE(text, [dec_sep], [group_sep])` | `text`: 文字列<br>`dec_sep`（省略可）: 小数点文字（省略可）<br>`group_sep`（省略可）: 桁区切り文字（省略可） | 小数点・桁区切りを指定して数値化 |
+| `TEXTBEFORE` | `TEXTBEFORE(text, delimiter)` | `text`: 文字列<br>`delimiter`: 区切り文字列 | 区切りより前の文字列 |
+| `TEXTAFTER` | `TEXTAFTER(text, delimiter)` | `text`: 文字列<br>`delimiter`: 区切り文字列 | 区切りより後の文字列 |
+| `TEXTSPLIT` | `TEXTSPLIT(text, col_delimiter)` | `text`: 文字列<br>`col_delimiter`: 列に分割する区切り文字 | 区切りで分割 |
 
 ### 日付・時刻 (Date/Time)
 
-| 関数 | 構文 | 説明 |
-|:---|:---|:---|
-| `TODAY` | `TODAY()` | 今日の日付シリアル |
-| `NOW` | `NOW()` | 現在日時のシリアル |
-| `DATE` | `DATE(year, month, day)` | 年・月・日から日付シリアルを作成 |
-| `DATEVALUE` | `DATEVALUE(date_text)` | 日付文字列をシリアルに変換 |
-| `TIME` | `TIME(hour, minute, second)` | 時・分・秒から時刻小数（0〜1）を作成 |
-| `TIMEVALUE` | `TIMEVALUE(time_text)` | 時刻文字列を時刻小数に変換 |
-| `DATEDIF` | `DATEDIF(start_date, end_date, unit)` | 日付差（単位: "Y","M","D","YM","YD","MD"） |
-| `DAYS` | `DAYS(end_date, start_date)` | 2つの日付の日数差 |
-| `DAYS360` | `DAYS360(start_date, end_date)` | 360日年（各月30日）での日数差 |
-| `NETWORKDAYS` | `NETWORKDAYS(start_date, end_date, [holidays])` | 営業日数（休日オプション可） |
-| `WORKDAY` | `WORKDAY(start_date, days, [holidays])` | 営業日数だけ前後した日付 |
-| `YEARFRAC` | `YEARFRAC(start_date, end_date)` | 年間に対する日数の割合 |
-| `YEAR` | `YEAR(serial_date)` | 西暦年（4桁） |
-| `MONTH` | `MONTH(serial_date)` | 月（1〜12） |
-| `DAY` | `DAY(serial_date)` | 日（1〜31） |
-| `HOUR` | `HOUR(time_serial)` | 時（0〜23） |
-| `MINUTE` | `MINUTE(time_serial)` | 分（0〜59） |
-| `SECOND` | `SECOND(time_serial)` | 秒（0〜59） |
-| `WEEKDAY` | `WEEKDAY(serial_date, [type])` | 曜日番号（形式により日始まり／月始まり） |
-| `WEEKNUM` | `WEEKNUM(serial_date)` | 週番号（1〜53） |
-| `EDATE` | `EDATE(start_date, months)` | n か月前後の日付 |
-| `EOMONTH` | `EOMONTH(start_date, months)` | n か月前後の月末日 |
+| 関数 | 構文 | 引数 | 概要 |
+|:---|:---|:---|:---|
+| `TODAY` | `TODAY()` | （引数なし） | 今日の日付シリアル |
+| `NOW` | `NOW()` | （引数なし） | 現在日時のシリアル |
+| `DATE` | `DATE(year, month, day)` | `year`: 西暦年（4桁）<br>`month`: 月（1–12）<br>`day`: 日（1–31） | 年・月・日から日付シリアルを作成 |
+| `DATEVALUE` | `DATEVALUE(date_text)` | `date_text`: 日付を表す文字列 | 日付文字列をシリアルに変換 |
+| `TIME` | `TIME(hour, minute, second)` | `hour`: 時（0–23）<br>`minute`: 分（0–59）<br>`second`: 秒（0–59） | 時・分・秒から時刻小数（0〜1）を作成 |
+| `TIMEVALUE` | `TIMEVALUE(time_text)` | `time_text`: 時刻を表す文字列 | 時刻文字列を時刻小数に変換 |
+| `DATEDIF` | `DATEDIF(start_date, end_date, unit)` | `start_date`: 開始日（シリアルまたは日付値）<br>`end_date`: 終了日（シリアルまたは日付値）<br>`unit`: 差の単位（"Y","M","D","YM","YD","MD"） | 日付差（単位: "Y","M","D","YM","YD","MD"） |
+| `DAYS` | `DAYS(end_date, start_date)` | `end_date`: 終了日（シリアルまたは日付値）<br>`start_date`: 開始日（シリアルまたは日付値） | 2つの日付の日数差 |
+| `DAYS360` | `DAYS360(start_date, end_date)` | `start_date`: 開始日（シリアルまたは日付値）<br>`end_date`: 終了日（シリアルまたは日付値） | 360日年（各月30日）での日数差 |
+| `NETWORKDAYS` | `NETWORKDAYS(start_date, end_date, [holidays])` | `start_date`: 開始日（シリアルまたは日付値）<br>`end_date`: 終了日（シリアルまたは日付値）<br>`holidays`（省略可）: 除外する休日の日付範囲（省略可） | 営業日数（休日オプション可） |
+| `WORKDAY` | `WORKDAY(start_date, days, [holidays])` | `start_date`: 開始日（シリアルまたは日付値）<br>`days`: 加減する（営業）日数<br>`holidays`（省略可）: 除外する休日の日付範囲（省略可） | 営業日数だけ前後した日付 |
+| `YEARFRAC` | `YEARFRAC(start_date, end_date)` | `start_date`: 開始日（シリアルまたは日付値）<br>`end_date`: 終了日（シリアルまたは日付値） | 年間に対する日数の割合 |
+| `YEAR` | `YEAR(serial_date)` | `serial_date`: 日付シリアル（または日付セル） | 西暦年（4桁） |
+| `MONTH` | `MONTH(serial_date)` | `serial_date`: 日付シリアル（または日付セル） | 月（1〜12） |
+| `DAY` | `DAY(serial_date)` | `serial_date`: 日付シリアル（または日付セル） | 日（1〜31） |
+| `HOUR` | `HOUR(time_serial)` | `time_serial`: 時刻シリアル（1日の小数）または日時 | 時（0〜23） |
+| `MINUTE` | `MINUTE(time_serial)` | `time_serial`: 時刻シリアル（1日の小数）または日時 | 分（0〜59） |
+| `SECOND` | `SECOND(time_serial)` | `time_serial`: 時刻シリアル（1日の小数）または日時 | 秒（0〜59） |
+| `WEEKDAY` | `WEEKDAY(serial_date, [type])` | `serial_date`: 日付シリアル（または日付セル）<br>`type`（省略可）: 支払時期（0=期末, 1=期首）または WEEKDAY の番号体系<br>type で番号付けを選択（例: 1=日…7=土、または月曜始まりの11–17）。 | 曜日番号（形式により日始まり／月始まり） |
+| `WEEKNUM` | `WEEKNUM(serial_date)` | `serial_date`: 日付シリアル（または日付セル） | 週番号（1〜53） |
+| `EDATE` | `EDATE(start_date, months)` | `start_date`: 開始日（シリアルまたは日付値）<br>`months`: ずらす月数（負も可） | n か月前後の日付 |
+| `EOMONTH` | `EOMONTH(start_date, months)` | `start_date`: 開始日（シリアルまたは日付値）<br>`months`: ずらす月数（負も可） | n か月前後の月末日 |
 
 ### 財務 (Financial)
 
-| 関数 | 構文 | 説明 |
-|:---|:---|:---|
-| `PMT` | `PMT(rate, nper, pv, [fv], [type])` | ローン等の定期支払額 |
-| `PV` | `PV(rate, nper, pmt, [fv], [type])` | 現在価値 |
-| `FV` | `FV(rate, nper, pmt, [pv], [type])` | 将来価値 |
-| `NPV` | `NPV(rate, val1, [val2]...)` | 正味現在価値（NPV） |
-| `IRR` | `IRR(values, [guess])` | 内部収益率（IRR） |
-| `RATE` | `RATE(nper, pmt, pv, [fv], [type])` | 期間あたり利率 |
-| `NPER` | `NPER(rate, pmt, pv, [fv], [type])` | 期間数 |
-| `SLN` | `SLN(cost, salvage, life)` | 定額法の減価償却費 |
-| `SYD` | `SYD(cost, salvage, life, per)` | 級数法の減価償却費 |
-| `DDB` | `DDB(cost, salvage, life, period, [factor])` | 定率法（倍額定率など）の減価償却費 |
+| 関数 | 構文 | 引数 | 概要 |
+|:---|:---|:---|:---|
+| `PMT` | `PMT(rate, nper, pv, [fv], [type])` | `rate`: 各期の利率／割引率<br>`nper`: 支払回数（期数）<br>`pv`: 現在価値<br>`fv`（省略可）: 将来価値（省略時0）<br>`type`（省略可）: 支払時期（0=期末, 1=期首）または WEEKDAY の番号体系<br>type: 0=期末払い（省略時）, 1=期首払い。 | ローン等の定期支払額 |
+| `PV` | `PV(rate, nper, pmt, [fv], [type])` | `rate`: 各期の利率／割引率<br>`nper`: 支払回数（期数）<br>`pmt`: 各期の支払額<br>`fv`（省略可）: 将来価値（省略時0）<br>`type`（省略可）: 支払時期（0=期末, 1=期首）または WEEKDAY の番号体系<br>type: 0=期末（省略時）, 1=期首。 | 現在価値 |
+| `FV` | `FV(rate, nper, pmt, [pv], [type])` | `rate`: 各期の利率／割引率<br>`nper`: 支払回数（期数）<br>`pmt`: 各期の支払額<br>`pv`（省略可）: 現在価値<br>`type`（省略可）: 支払時期（0=期末, 1=期首）または WEEKDAY の番号体系<br>type: 0=期末（省略時）, 1=期首。 | 将来価値 |
+| `NPV` | `NPV(rate, val1, [val2]...)` | `rate`: 各期の利率／割引率<br>`val1`: リスト上の値／選択肢<br>`val2`（繰り返し可）: 追加の値 | 正味現在価値（NPV） |
+| `IRR` | `IRR(values, [guess])` | `values`: キャッシュフローの値範囲<br>`guess`（省略可）: IRR の初期推定値（省略可） | 内部収益率（IRR） |
+| `RATE` | `RATE(nper, pmt, pv, [fv], [type])` | `nper`: 支払回数（期数）<br>`pmt`: 各期の支払額<br>`pv`: 現在価値<br>`fv`（省略可）: 将来価値（省略時0）<br>`type`（省略可）: 支払時期（0=期末, 1=期首）または WEEKDAY の番号体系<br>type: 0=期末（省略時）, 1=期首。 | 期間あたり利率 |
+| `NPER` | `NPER(rate, pmt, pv, [fv], [type])` | `rate`: 各期の利率／割引率<br>`pmt`: 各期の支払額<br>`pv`: 現在価値<br>`fv`（省略可）: 将来価値（省略時0）<br>`type`（省略可）: 支払時期（0=期末, 1=期首）または WEEKDAY の番号体系<br>type: 0=期末（省略時）, 1=期首。 | 期間数 |
+| `SLN` | `SLN(cost, salvage, life)` | `cost`: 取得原価<br>`salvage`: 残存価額<br>`life`: 耐用期間（期数） | 定額法の減価償却費 |
+| `SYD` | `SYD(cost, salvage, life, per)` | `cost`: 取得原価<br>`salvage`: 残存価額<br>`life`: 耐用期間（期数）<br>`per`: 減価償却を求める期 | 級数法の減価償却費 |
+| `DDB` | `DDB(cost, salvage, life, period, [factor])` | `cost`: 取得原価<br>`salvage`: 残存価額<br>`life`: 耐用期間（期数）<br>`period`: 期番号<br>`factor`（省略可）: 定率法の率係数（省略時は多くの場合2） | 定率法（倍額定率など）の減価償却費 |
 
 ### 別名（受理するだけ）
 

@@ -179,205 +179,188 @@ Open via CLI (`hasucalc file.md`) or **Ctrl+O** (lists `.md` / `.html` among oth
 
 ## 9. Function reference
 
-Functions accept either `@NAME(...)` or `NAME(...)` after `=`. Optional arguments are shown in `[brackets]`.
+Functions accept either `@NAME(...)` or `NAME(...)` after `=`. Arguments in `[brackets]` are optional. Trailing `...` means you may repeat that argument.
+
+The **Parameters** column explains what to put in each slot.
 
 ### Math/Agg
 
-| Function | Syntax | Description |
-|:---|:---|:---|
-| `SUM` | `SUM(range/list)` | Calculates total sum of numbers in range |
-| `SUMIF` | `SUMIF(range, criteria, [sum_range])` | Sums cells meeting specified criteria (e.g. \ |
-| `SUMIFS` | `SUMIFS(sum_rng, crit_rng1, crit1, ...)` | Sums cells that meet multiple criteria across ranges |
-| `SUMPRODUCT` | `SUMPRODUCT(array1, [array2]...)` | Calculates sum of products of corresponding items |
-| `PRODUCT` | `PRODUCT(number1, [number2]...)` | Multiplies all numbers given in arguments |
-| `SUBTOTAL` | `SUBTOTAL(function_num, ref1, ...)` | Calculates subtotal in list/database (9=SUM, 1=AVG, etc.) |
-| `ROUND` | `ROUND(val, num_digits)` | Rounds number to specified decimal places |
-| `ROUNDUP` | `ROUNDUP(val, num_digits)` | Rounds number up, away from zero |
-| `ROUNDDOWN` | `ROUNDDOWN(val, num_digits)` | Rounds number down, towards zero |
-| `TRUNC` | `TRUNC(val, [num_digits])` | Truncates number to specified decimal places |
-| `INT` | `INT(val)` | Rounds number down to nearest integer |
-| `ABS` | `ABS(val)` | Returns absolute value of number |
-| `MOD` | `MOD(number, divisor)` | Returns remainder after division (modulo) |
-| `QUOTIENT` | `QUOTIENT(numerator, denominator)` | Returns integer portion of a division |
-| `SIGN` | `SIGN(number)` | Returns sign of number (1=pos, -1=neg, 0=zero) |
-| `POWER` | `POWER(number, power)` | Calculates number raised to a power (x^y) |
-| `SQRT` | `SQRT(val)` | Calculates square root of positive number |
-| `EXP` | `EXP(number)` | Returns e raised to the power of number |
-| `LN` | `LN(number)` | Returns natural logarithm of number |
-| `LOG` | `LOG(number, [base])` | Returns logarithm of number to specified base (default 10) |
-| `LOG10` | `LOG10(number)` | Returns base-10 logarithm of number |
-| `CEILING` | `CEILING(number, significance)` | Rounds number up to nearest multiple of significance |
-| `FLOOR` | `FLOOR(number, significance)` | Rounds number down to nearest multiple of significance |
-| `MROUND` | `MROUND(number, multiple)` | Rounds number to nearest multiple |
-| `FACT` | `FACT(number)` | Calculates factorial of a number (n!) |
-| `GCD` | `GCD(number1, number2, ...)` | Returns greatest common divisor |
-| `LCM` | `LCM(number1, number2, ...)` | Returns least common multiple |
-| `COMBIN` | `COMBIN(n, k)` | Returns number of combinations for n items choose k (nCr) |
-| `PERMUT` | `PERMUT(n, k)` | Returns number of permutations for n items choose k (nPr) |
-| `PI` | `PI()` | Returns constant value of Pi (3.14159265...) |
-| `DEGREES` | `DEGREES(angle_in_radians)` | Converts radians to degrees |
-| `RADIANS` | `RADIANS(angle_in_degrees)` | Converts degrees to radians |
-| `SIN` | `SIN(number)` | Returns sine of an angle in radians |
-| `COS` | `COS(number)` | Returns cosine of an angle in radians |
-| `TAN` | `TAN(number)` | Returns tangent of an angle in radians |
-| `ASIN` | `ASIN(number)` | Returns arcsine (inverse sine) in radians |
-| `ACOS` | `ACOS(number)` | Returns arccosine (inverse cosine) in radians |
-| `ATAN` | `ATAN(number)` | Returns arctangent in radians |
-| `ATAN2` | `ATAN2(x_num, y_num)` | Returns arctangent from x and y coordinates |
-| `RAND` | `RAND()` | Returns random real number between 0 and 1 |
-| `RANDBETWEEN` | `RANDBETWEEN(min, max)` | Returns random integer between min and max (inclusive) |
+| Function | Syntax | Parameters | Summary |
+|:---|:---|:---|:---|
+| `SUM` | `SUM(range/list)` | `range/list`: cell range and/or individual numbers | Calculates total sum of numbers in range |
+| `SUMIF` | `SUMIF(range, criteria, [sum_range])` | `range`: cell range<br>`criteria`: condition such as ">50", "Apple", or a cell<br>`sum_range` (optional): optional cells to sum (defaults to range) | Sums cells meeting specified criteria (e.g. ">50", "Apple") |
+| `SUMIFS` | `SUMIFS(sum_rng, crit_rng1, crit1, ...)` | `sum_rng`: cells to sum when criteria match<br>`crit_rng1`: first criteria range (same shape as related ranges)<br>`crit1`: first criteria value/expression<br>`array2` (repeatable): additional range/array (same shape) | Calculates sum of products of corresponding items |
+| `PRODUCT` | `PRODUCT(number1, [number2]...)` | `number1`: first number<br>`number2` (repeatable): additional number | Multiplies all numbers given in arguments |
+| `SUBTOTAL` | `SUBTOTAL(function_num, ref1, ...)` | `function_num`: SUBTOTAL function code (1=AVG, 2=COUNT, 9=SUM, …)<br>`ref1`: first reference for SUBTOTAL<br>Common function_num: 1 AVG, 2 COUNT, 3 COUNTA, 4 MAX, 5 MIN, 6 PRODUCT, 7 STDEV, 9 SUM, 10 VAR. | Calculates subtotal in list/database (9=SUM, 1=AVG, etc.) |
+| `ROUND` | `ROUND(val, num_digits)` | `val`: value to test or convert<br>`num_digits`: digits after the decimal point | Rounds number to specified decimal places |
+| `ROUNDUP` | `ROUNDUP(val, num_digits)` | `val`: value to test or convert<br>`num_digits`: digits after the decimal point | Rounds number up, away from zero |
+| `ROUNDDOWN` | `ROUNDDOWN(val, num_digits)` | `val`: value to test or convert<br>`num_digits`: digits after the decimal point | Rounds number down, towards zero |
+| `TRUNC` | `TRUNC(val, [num_digits])` | `val`: value to test or convert<br>`num_digits` (optional): digits after the decimal point | Truncates number to specified decimal places |
+| `INT` | `INT(val)` | `val`: value to test or convert | Rounds number down to nearest integer |
+| `ABS` | `ABS(val)` | `val`: value to test or convert | Returns absolute value of number |
+| `MOD` | `MOD(number, divisor)` | `number`: numeric value<br>`divisor`: number to divide by | Returns remainder after division (modulo) |
+| `QUOTIENT` | `QUOTIENT(numerator, denominator)` | `numerator`: dividend<br>`denominator`: divisor | Returns integer portion of a division |
+| `SIGN` | `SIGN(number)` | `number`: numeric value | Returns sign of number (1=pos, -1=neg, 0=zero) |
+| `POWER` | `POWER(number, power)` | `number`: numeric value<br>`power`: exponent | Calculates number raised to a power (x^y) |
+| `SQRT` | `SQRT(val)` | `val`: value to test or convert | Calculates square root of positive number |
+| `EXP` | `EXP(number)` | `number`: numeric value | Returns e raised to the power of number |
+| `LN` | `LN(number)` | `number`: numeric value | Returns natural logarithm of number |
+| `LOG` | `LOG(number, [base])` | `number`: numeric value<br>`base` (optional): logarithm base (default 10) | Returns logarithm of number to specified base (default 10) |
+| `LOG10` | `LOG10(number)` | `number`: numeric value | Returns base-10 logarithm of number |
+| `CEILING` | `CEILING(number, significance)` | `number`: numeric value<br>`significance`: multiple / significance step | Rounds number up to nearest multiple of significance |
+| `FLOOR` | `FLOOR(number, significance)` | `number`: numeric value<br>`significance`: multiple / significance step | Rounds number down to nearest multiple of significance |
+| `MROUND` | `MROUND(number, multiple)` | `number`: numeric value<br>`multiple`: multiple to round to | Rounds number to nearest multiple |
+| `FACT` | `FACT(number)` | `number`: numeric value | Calculates factorial of a number (n!) |
+| `GCD` | `GCD(number1, number2, ...)` | `number1`: first number<br>`number2`: additional number<br>`number2`: additional number<br>`k`: rank or fraction depending on the function (see description) | Returns number of combinations for n items choose k (nCr) |
+| `PERMUT` | `PERMUT(n, k)` | `n`: total items / periods depending on function<br>`k`: rank or fraction depending on the function (see description) | Returns number of permutations for n items choose k (nPr) |
+| `PI` | `PI()` | —(no arguments)— | Returns constant value of Pi (3.14159265...) |
+| `DEGREES` | `DEGREES(angle_in_radians)` | `angle_in_radians`: angle in radians | Converts radians to degrees |
+| `RADIANS` | `RADIANS(angle_in_degrees)` | `angle_in_degrees`: angle in degrees | Converts degrees to radians |
+| `SIN` | `SIN(number)` | `number`: numeric value | Returns sine of an angle in radians |
+| `COS` | `COS(number)` | `number`: numeric value | Returns cosine of an angle in radians |
+| `TAN` | `TAN(number)` | `number`: numeric value | Returns tangent of an angle in radians |
+| `ASIN` | `ASIN(number)` | `number`: numeric value | Returns arcsine (inverse sine) in radians |
+| `ACOS` | `ACOS(number)` | `number`: numeric value | Returns arccosine (inverse cosine) in radians |
+| `ATAN` | `ATAN(number)` | `number`: numeric value | Returns arctangent in radians |
+| `ATAN2` | `ATAN2(x_num, y_num)` | `x_num`: X coordinate<br>`y_num`: Y coordinate | Returns arctangent from x and y coordinates |
+| `RAND` | `RAND()` | —(no arguments)— | Returns random real number between 0 and 1 |
+| `RANDBETWEEN` | `RANDBETWEEN(min, max)` | `min`: minimum integer (inclusive)<br>`max`: maximum integer (inclusive) | Returns random integer between min and max (inclusive) |
 
 ### Statistical
 
-| Function | Syntax | Description |
-|:---|:---|:---|
-| `AVG` | `AVG(range/list)` | Calculates arithmetic mean (average) |
-| `AVERAGEIF` | `AVERAGEIF(range, criteria, [avg_range])` | Calculates average of cells meeting criteria |
-| `AVERAGEIFS` | `AVERAGEIFS(avg_rng, crit_rng1, crit1, ...)` | Calculates average of cells meeting multiple criteria |
-| `COUNT` | `COUNT(range/list)` | Counts number of numeric cells in range |
-| `COUNTA` | `COUNTA(range/list)` | Counts number of non-empty cells in range |
-| `COUNTBLANK` | `COUNTBLANK(range)` | Counts number of empty cells in range |
-| `COUNTIF` | `COUNTIF(range, criteria)` | Counts number of cells meeting criteria |
-| `COUNTIFS` | `COUNTIFS(crit_rng1, crit1, ...)` | Counts cells that meet multiple criteria across ranges |
-| `MIN` | `MIN(range/list)` | Finds minimum value in range/list |
-| `MINIFS` | `MINIFS(min_rng, crit_rng1, crit1, ...)` | Finds minimum value among cells meeting multiple criteria |
-| `MAX` | `MAX(range/list)` | Finds maximum value in range/list |
-| `MAXIFS` | `MAXIFS(max_rng, crit_rng1, crit1, ...)` | Finds maximum value among cells meeting multiple criteria |
-| `MEDIAN` | `MEDIAN(range/list)` | Returns median (middle value) of numbers |
-| `MODE` | `MODE(range/list)` | Returns most frequently occurring value in data set |
-| `LARGE` | `LARGE(array, k)` | Returns k-th largest value in a data set |
-| `SMALL` | `SMALL(array, k)` | Returns k-th smallest value in a data set |
-| `PERCENTILE` | `PERCENTILE(array, k)` | Returns k-th percentile of values in a range (0..1) |
-| `QUARTILE` | `QUARTILE(array, quart)` | Returns quartile of data set (0..4) |
-| `STDEV` | `STDEV(range/list)` | Estimates sample standard deviation (n-1) |
-| `STDEVP` | `STDEVP(range/list)` | Calculates population standard deviation (n) |
-| `VAR` | `VAR(range/list)` | Estimates sample variance (n-1) |
-| `VARP` | `VARP(range/list)` | Calculates population variance (n) |
-| `RANK` | `RANK(num, range, [order])` | Returns rank of a number in a range (0=desc, 1=asc) |
+| Function | Syntax | Parameters | Summary |
+|:---|:---|:---|:---|
+| `AVG` | `AVG(range/list)` | `range/list`: cell range and/or individual numbers | Calculates arithmetic mean (average) |
+| `AVERAGEIF` | `AVERAGEIF(range, criteria, [avg_range])` | `range`: cell range<br>`criteria`: condition such as ">50", "Apple", or a cell<br>`avg_range` (optional): optional cells to average (defaults to range) | Calculates average of cells meeting criteria |
+| `AVERAGEIFS` | `AVERAGEIFS(avg_rng, crit_rng1, crit1, ...)` | `avg_rng`: cells whose average is computed<br>`crit_rng1`: first criteria range (same shape as related ranges)<br>`crit1`: first criteria value/expression<br>`criteria`: condition such as ">50", "Apple", or a cell | Counts number of cells meeting criteria |
+| `COUNTIFS` | `COUNTIFS(crit_rng1, crit1, ...)` | `crit_rng1`: first criteria range (same shape as related ranges)<br>`crit1`: first criteria value/expression<br>`crit_rng1`: first criteria range (same shape as related ranges)<br>`crit1`: first criteria value/expression<br>`crit_rng1`: first criteria range (same shape as related ranges)<br>`crit1`: first criteria value/expression<br>`k`: rank or fraction depending on the function (see description)<br>k=1 is the largest value. | Returns k-th largest value in a data set |
+| `SMALL` | `SMALL(array, k)` | `array`: cell range or value list<br>`k`: rank or fraction depending on the function (see description)<br>k=1 is the smallest value. | Returns k-th smallest value in a data set |
+| `PERCENTILE` | `PERCENTILE(array, k)` | `array`: cell range or value list<br>`k`: rank or fraction depending on the function (see description)<br>k is from 0 through 1 (0%=min, 100%=max). | Returns k-th percentile of values in a range (0..1) |
+| `QUARTILE` | `QUARTILE(array, quart)` | `array`: cell range or value list<br>`quart`: quartile number 0–4 | Returns quartile of data set (0..4) |
+| `STDEV` | `STDEV(range/list)` | `range/list`: cell range and/or individual numbers | Estimates sample standard deviation (n-1) |
+| `STDEVP` | `STDEVP(range/list)` | `range/list`: cell range and/or individual numbers | Calculates population standard deviation (n) |
+| `VAR` | `VAR(range/list)` | `range/list`: cell range and/or individual numbers | Estimates sample variance (n-1) |
+| `VARP` | `VARP(range/list)` | `range/list`: cell range and/or individual numbers | Calculates population variance (n) |
+| `RANK` | `RANK(num, range, [order])` | `num`: number whose rank is returned<br>`range`: cell range<br>`order` (optional): 0 = descending rank, 1 = ascending (optional)<br>order omitted or 0 = rank as if sorted descending. | Returns rank of a number in a range (0=desc, 1=asc) |
 
 ### Lookup/Ref
 
-| Function | Syntax | Description |
-|:---|:---|:---|
-| `XLOOKUP` | `XLOOKUP(key, lk_rng, ret_rng, [fallback], [match], [search])` | Modern 2-way exact & approximate lookup with fallback value |
-| `VLOOKUP` | `VLOOKUP(key, table_range, col_offset, [exact])` | Searches leftmost column and returns offset column value |
-| `HLOOKUP` | `HLOOKUP(key, table_range, row_offset, [exact])` | Searches topmost row and returns offset row value |
-| `LOOKUP` | `LOOKUP(val, lookup_vector, [result_vector])` | Looks up value in 1-row or 1-column range |
-| `INDEX` | `INDEX(range, col_offset, row_offset)` | Returns cell value at intersection coordinate (0-based) |
-| `MATCH` | `MATCH(key, lookup_array, [match_type])` | Returns index position of matched item in array (1-based) |
-| `XMATCH` | `XMATCH(key, lookup_array, [match_mode], [search_mode])` | Modern position lookup with exact, wildcard, and reverse search |
-| `OFFSET` | `OFFSET(ref, rows, cols, [height], [width])` | Returns reference offset from starting cell/range |
-| `CHOOSE` | `CHOOSE(index, val0, val1, val2...)` | Selects and returns value from list by 0-based index |
-| `ROW` | `ROW([cell])` | Returns row number of current or referenced cell (1-based) |
-| `COLUMN` | `COLUMN([cell])` | Returns column number of current or referenced cell (1-based) |
-| `ROWS` | `ROWS(range)` | Returns total number of rows in specified range |
-| `COLUMNS` | `COLUMNS(range)` | Returns total number of columns in specified range |
-| `TRANSPOSE` | `TRANSPOSE(array)` | Transposes rows and columns of an array |
+| Function | Syntax | Parameters | Summary |
+|:---|:---|:---|:---|
+| `XLOOKUP` | `XLOOKUP(key, lk_rng, ret_rng, [fallback], [match], [search])` | `key`: lookup key to find<br>`lk_rng`: range where the key is searched<br>`ret_rng`: range of values to return for a match<br>`fallback` (optional): value if not found<br>`match` (optional): match mode for XLOOKUP (optional)<br>`search` (optional): search direction/mode for XLOOKUP (optional) | Modern 2-way exact & approximate lookup with fallback value |
+| `VLOOKUP` | `VLOOKUP(key, table_range, col_offset, [exact])` | `key`: lookup key to find<br>`table_range`: lookup table range<br>`col_offset`: column offset within the range (0-based for INDEX)<br>`exact` (optional): TRUE/1 = exact match; FALSE/0 = approximate (sorted) | Searches leftmost column and returns offset column value |
+| `HLOOKUP` | `HLOOKUP(key, table_range, row_offset, [exact])` | `key`: lookup key to find<br>`table_range`: lookup table range<br>`row_offset`: row offset within the range (0-based for INDEX)<br>`exact` (optional): TRUE/1 = exact match; FALSE/0 = approximate (sorted) | Searches topmost row and returns offset row value |
+| `LOOKUP` | `LOOKUP(val, lookup_vector, [result_vector])` | `val`: value to test or convert<br>`lookup_vector`: lookup row/column<br>`result_vector` (optional): optional parallel range of return values | Looks up value in 1-row or 1-column range |
+| `INDEX` | `INDEX(range, col_offset, row_offset)` | `range`: cell range<br>`col_offset`: column offset within the range (0-based for INDEX)<br>`row_offset`: row offset within the range (0-based for INDEX)<br>Note: col_offset and row_offset are 0-based in HasuCalc. | Returns cell value at intersection coordinate (0-based) |
+| `MATCH` | `MATCH(key, lookup_array, [match_type])` | `key`: lookup key to find<br>`lookup_array`: one-row or one-column range to search<br>`match_type` (optional): 1 / 0 / -1 match behavior (optional; see MATCH)<br>match_type: 1 largest≤key (asc), 0 exact, -1 smallest≥key (desc). | Returns index position of matched item in array (1-based) |
+| `XMATCH` | `XMATCH(key, lookup_array, [match_mode], [search_mode])` | `key`: lookup key to find<br>`lookup_array`: one-row or one-column range to search<br>`match_mode` (optional): exact / wildcard / approx mode (optional)<br>`search_mode` (optional): search direction/mode (optional) | Modern position lookup with exact, wildcard, and reverse search |
+| `OFFSET` | `OFFSET(ref, rows, cols, [height], [width])` | `ref`: starting cell or range<br>`rows`: rows to shift from the start reference<br>`cols`: columns to shift from the start reference<br>`height` (optional): optional height of the returned range (rows)<br>`width` (optional): optional width of the returned range (columns) | Returns reference offset from starting cell/range |
+| `CHOOSE` | `CHOOSE(index, val0, val1, val2...)` | `index`: 0-based index into the value list (CHOOSE)<br>`val0`: first choice value (index 0)<br>`val1`: value / choice in a list<br>`val2` (repeatable): additional value in a list<br>Note: index is 0-based (first value is index 0). | Selects and returns value from list by 0-based index |
+| `ROW` | `ROW([cell])` | `cell` (optional): optional cell reference (defaults to the formula cell) | Returns row number of current or referenced cell (1-based) |
+| `COLUMN` | `COLUMN([cell])` | `cell` (optional): optional cell reference (defaults to the formula cell) | Returns column number of current or referenced cell (1-based) |
+| `ROWS` | `ROWS(range)` | `range`: cell range | Returns total number of rows in specified range |
+| `COLUMNS` | `COLUMNS(range)` | `range`: cell range | Returns total number of columns in specified range |
+| `TRANSPOSE` | `TRANSPOSE(array)` | `array`: cell range or value list | Transposes rows and columns of an array |
 
 ### Logic/Error
 
-| Function | Syntax | Description |
-|:---|:---|:---|
-| `IF` | `IF(condition, true_val, false_val)` | Conditional three-way branching |
-| `IFS` | `IFS(cond1, val1, [cond2, val2]...)` | Evaluates multiple conditions in sequence |
-| `SWITCH` | `SWITCH(expr, val1, res1, [val2, res2]..., [default])` | Evaluates expression against a list of values |
-| `AND` | `AND(logical1, [logical2], ...)` | Returns true if all arguments are true |
-| `OR` | `OR(logical1, [logical2], ...)` | Returns true if any argument is true |
-| `NOT` | `NOT(logical)` | Reverses the logical value of argument |
-| `XOR` | `XOR(logical1, [logical2]...)` | Returns exclusive OR of arguments |
-| `IFERROR` | `IFERROR(formula, fallback_val)` | Returns fallback value if formula results in error |
-| `IFNA` | `IFNA(formula, fallback_val)` | Returns fallback value if formula results in #N/A |
-| `ISNUMBER` | `ISNUMBER(val)` | Tests if value is a numeric number (returns 1 or 0) |
-| `ISSTRING` | `ISSTRING(val)` | Tests if value is a text string (returns 1 or 0) |
-| `ISTEXT` | `ISTEXT(val)` | Tests if value is text (returns 1 or 0) |
-| `ISNONTEXT` | `ISNONTEXT(val)` | Tests if value is not text (returns 1 or 0) |
-| `ISBLANK` | `ISBLANK(val)` | Tests if referenced cell is blank/empty |
-| `ISLOGICAL` | `ISLOGICAL(val)` | Tests if value is a logical boolean |
-| `ISERR` | `ISERR(val)` | Tests if value is an error #ERR (returns 1 or 0) |
-| `ISNA` | `ISNA(val)` | Tests if value is #N/A (returns 1 or 0) |
-| `ISEVEN` | `ISEVEN(number)` | Tests if number is even (returns 1 or 0) |
-| `ISODD` | `ISODD(number)` | Tests if number is odd (returns 1 or 0) |
-| `TRUE` | `TRUE()` | Returns boolean true |
-| `FALSE` | `FALSE()` | Returns boolean false |
-| `N` | `N(value)` | Converts value to a numeric number |
-| `T` | `T(value)` | Returns text string if value is text, empty string otherwise |
-| `TYPE` | `TYPE(value)` | Returns integer code for value data type (1=num, 2=text, etc.) |
+| Function | Syntax | Parameters | Summary |
+|:---|:---|:---|:---|
+| `IF` | `IF(condition, true_val, false_val)` | `condition`: logical test (true/false)<br>`true_val`: result when the condition is true<br>`false_val`: result when the condition is false | Conditional three-way branching |
+| `IFS` | `IFS(cond1, val1, [cond2, val2]...)` | `cond1`: first condition (true/false)<br>`val1`: value / choice in a list<br>`cond2`: next condition<br>`val2` (repeatable): additional value in a list | Evaluates multiple conditions in sequence |
+| `SWITCH` | `SWITCH(expr, val1, res1, [val2, res2]..., [default])` | `expr`: value to compare against the list<br>`val1`: value / choice in a list<br>`res1`: result when expr equals val1<br>`val2`: additional value in a list<br>`res2` (repeatable): result when expr equals val2<br>`default` (optional): value if nothing else matched | Evaluates expression against a list of values |
+| `AND` | `AND(logical1, [logical2], ...)` | `logical1`: first logical value<br>`logical2` (optional): additional logical value<br>`logical2` (optional): additional logical value<br>`logical2` (repeatable): additional logical value | Returns exclusive OR of arguments |
+| `IFERROR` | `IFERROR(formula, fallback_val)` | `formula`: expression or reference to evaluate<br>`fallback_val`: value returned when the primary result is an error/NA | Returns fallback value if formula results in error |
+| `IFNA` | `IFNA(formula, fallback_val)` | `formula`: expression or reference to evaluate<br>`fallback_val`: value returned when the primary result is an error/NA | Returns fallback value if formula results in #N/A |
+| `ISNUMBER` | `ISNUMBER(val)` | `val`: value to test or convert | Tests if value is a numeric number (returns 1 or 0) |
+| `ISSTRING` | `ISSTRING(val)` | `val`: value to test or convert | Tests if value is a text string (returns 1 or 0) |
+| `ISTEXT` | `ISTEXT(val)` | `val`: value to test or convert | Tests if value is text (returns 1 or 0) |
+| `ISNONTEXT` | `ISNONTEXT(val)` | `val`: value to test or convert | Tests if value is not text (returns 1 or 0) |
+| `ISBLANK` | `ISBLANK(val)` | `val`: value to test or convert | Tests if referenced cell is blank/empty |
+| `ISLOGICAL` | `ISLOGICAL(val)` | `val`: value to test or convert | Tests if value is a logical boolean |
+| `ISERR` | `ISERR(val)` | `val`: value to test or convert | Tests if value is an error #ERR (returns 1 or 0) |
+| `ISNA` | `ISNA(val)` | `val`: value to test or convert | Tests if value is #N/A (returns 1 or 0) |
+| `ISEVEN` | `ISEVEN(number)` | `number`: numeric value | Tests if number is even (returns 1 or 0) |
+| `ISODD` | `ISODD(number)` | `number`: numeric value | Tests if number is odd (returns 1 or 0) |
+| `TRUE` | `TRUE()` | —(no arguments)— | Returns boolean true |
+| `FALSE` | `FALSE()` | —(no arguments)— | Returns boolean false |
+| `N` | `N(value)` | `value`: value to convert or format | Converts value to a numeric number |
+| `T` | `T(value)` | `value`: value to convert or format | Returns text string if value is text, empty string otherwise |
+| `TYPE` | `TYPE(value)` | `value`: value to convert or format | Returns integer code for value data type (1=num, 2=text, etc.) |
 
 ### Text
 
-| Function | Syntax | Description |
-|:---|:---|:---|
-| `TEXT` | `TEXT(value, format_string)` | Formats number or date with custom format string (e.g. \ |
-| `TRIM` | `TRIM(text)` | Strips leading/trailing spaces and collapses internal spaces |
-| `CLEAN` | `CLEAN(text)` | Removes all non-printable characters from text |
-| `SUBSTITUTE` | `SUBSTITUTE(text, old_text, new_text, [instance])` | Replaces occurrences of substring in text |
-| `REPLACE` | `REPLACE(old_text, start_pos, num_chars, new_text)` | Replaces characters at position within text |
-| `REPT` | `REPT(text, number_times)` | Repeats text a given number of times |
-| `UPPER` | `UPPER(text)` | Converts all letters in text to UPPERCASE |
-| `LOWER` | `LOWER(text)` | Converts all letters in text to lowercase |
-| `PROPER` | `PROPER(text)` | Converts text to Title Case (capitalizes each word) |
-| `EXACT` | `EXACT(text1, text2)` | Tests if two text values are exactly identical (case-sensitive) |
-| `CHAR` | `CHAR(number)` | Returns character specified by ASCII/code number |
-| `CODE` | `CODE(text)` | Returns numeric code for the first character in text string |
-| `UNICHAR` | `UNICHAR(number)` | Returns Unicode character specified by numeric value |
-| `UNICODE` | `UNICODE(text)` | Returns numeric Unicode codepoint of first character |
-| `CONCATENATE` | `CONCATENATE(text1, text2, ...)` | Joins multiple text strings into a single string |
-| `CONCAT` | `CONCAT(text1, text2, ...)` | Concatenates list or range of text items |
-| `TEXTJOIN` | `TEXTJOIN(delimiter, ignore_empty, text1, ...)` | Joins text strings with a custom delimiter and options |
-| `LEFT` | `LEFT(text, num_chars)` | Extracts leftmost characters from text string |
-| `RIGHT` | `RIGHT(text, num_chars)` | Extracts rightmost characters from text string |
-| `MID` | `MID(text, start_pos, num_chars)` | Extracts substring from middle of text string |
-| `LEN` | `LEN(text)` | Returns total number of characters in text string |
-| `FIND` | `FIND(find_text, within_text, [start])` | Case-sensitive search for text position (1-based) |
-| `SEARCH` | `SEARCH(find_text, within_text, [start])` | Case-insensitive & wildcard (*, ?) text position search |
-| `STRING` | `STRING(number, decimal_places)` | Formats number as string with fixed decimal places |
-| `VALUE` | `VALUE(text)` | Converts numeric text string (with $, ¥, commas) to number |
-| `NUMBERVALUE` | `NUMBERVALUE(text, [dec_sep], [group_sep])` | Parses formatted number text with locale separators |
-| `TEXTBEFORE` | `TEXTBEFORE(text, delimiter)` | Extracts text occurring before delimiter |
-| `TEXTAFTER` | `TEXTAFTER(text, delimiter)` | Extracts text occurring after delimiter |
-| `TEXTSPLIT` | `TEXTSPLIT(text, col_delimiter)` | Splits text into array by delimiter |
+| Function | Syntax | Parameters | Summary |
+|:---|:---|:---|:---|
+| `TEXT` | `TEXT(value, format_string)` | `value`: value to convert or format<br>`format_string`: display format, e.g. "yyyy/mm/dd" or "#,##0.00" | Formats number or date with custom format string (e.g. "yyyy/mm/dd", "#,##0") |
+| `TRIM` | `TRIM(text)` | `text`: text string | Strips leading/trailing spaces and collapses internal spaces |
+| `CLEAN` | `CLEAN(text)` | `text`: text string | Removes all non-printable characters from text |
+| `SUBSTITUTE` | `SUBSTITUTE(text, old_text, new_text, [instance])` | `text`: text string<br>`old_text`: original text / substring to find<br>`new_text`: replacement text<br>`instance` (optional): which occurrence to replace (optional; all if omitted) | Replaces occurrences of substring in text |
+| `REPLACE` | `REPLACE(old_text, start_pos, num_chars, new_text)` | `old_text`: original text / substring to find<br>`start_pos`: 1-based start character position<br>`num_chars`: how many characters to take<br>`new_text`: replacement text | Replaces characters at position within text |
+| `REPT` | `REPT(text, number_times)` | `text`: text string<br>`number_times`: how many times to repeat | Repeats text a given number of times |
+| `UPPER` | `UPPER(text)` | `text`: text string | Converts all letters in text to UPPERCASE |
+| `LOWER` | `LOWER(text)` | `text`: text string | Converts all letters in text to lowercase |
+| `PROPER` | `PROPER(text)` | `text`: text string | Converts text to Title Case (capitalizes each word) |
+| `EXACT` | `EXACT(text1, text2)` | `text1`: first text value<br>`text2`: additional text value | Tests if two text values are exactly identical (case-sensitive) |
+| `CHAR` | `CHAR(number)` | `number`: numeric value | Returns character specified by ASCII/code number |
+| `CODE` | `CODE(text)` | `text`: text string | Returns numeric code for the first character in text string |
+| `UNICHAR` | `UNICHAR(number)` | `number`: numeric value | Returns Unicode character specified by numeric value |
+| `UNICODE` | `UNICODE(text)` | `text`: text string | Returns numeric Unicode codepoint of first character |
+| `CONCATENATE` | `CONCATENATE(text1, text2, ...)` | `text1`: first text value<br>`text2`: additional text value<br>`text2`: additional text value<br>`ignore_empty`: TRUE to skip empty pieces when joining<br>`text1`: first text value<br>ignore_empty: use 1/TRUE to skip blanks. | Joins text strings with a custom delimiter and options |
+| `LEFT` | `LEFT(text, num_chars)` | `text`: text string<br>`num_chars`: how many characters to take | Extracts leftmost characters from text string |
+| `RIGHT` | `RIGHT(text, num_chars)` | `text`: text string<br>`num_chars`: how many characters to take | Extracts rightmost characters from text string |
+| `MID` | `MID(text, start_pos, num_chars)` | `text`: text string<br>`start_pos`: 1-based start character position<br>`num_chars`: how many characters to take | Extracts substring from middle of text string |
+| `LEN` | `LEN(text)` | `text`: text string | Returns total number of characters in text string |
+| `FIND` | `FIND(find_text, within_text, [start])` | `find_text`: text to search for<br>`within_text`: text to search inside<br>`start` (optional): 1-based start position (optional) | Case-sensitive search for text position (1-based) |
+| `SEARCH` | `SEARCH(find_text, within_text, [start])` | `find_text`: text to search for<br>`within_text`: text to search inside<br>`start` (optional): 1-based start position (optional) | Case-insensitive & wildcard (*, ?) text position search |
+| `STRING` | `STRING(number, decimal_places)` | `number`: numeric value<br>`decimal_places`: number of digits after the decimal point | Formats number as string with fixed decimal places |
+| `VALUE` | `VALUE(text)` | `text`: text string | Converts numeric text string (with $, ¥, commas) to number |
+| `NUMBERVALUE` | `NUMBERVALUE(text, [dec_sep], [group_sep])` | `text`: text string<br>`dec_sep` (optional): decimal separator character (optional)<br>`group_sep` (optional): thousands grouping separator (optional) | Parses formatted number text with locale separators |
+| `TEXTBEFORE` | `TEXTBEFORE(text, delimiter)` | `text`: text string<br>`delimiter`: separator text | Extracts text occurring before delimiter |
+| `TEXTAFTER` | `TEXTAFTER(text, delimiter)` | `text`: text string<br>`delimiter`: separator text | Extracts text occurring after delimiter |
+| `TEXTSPLIT` | `TEXTSPLIT(text, col_delimiter)` | `text`: text string<br>`col_delimiter`: text that separates columns when splitting | Splits text into array by delimiter |
 
 ### Date/Time
 
-| Function | Syntax | Description |
-|:---|:---|:---|
-| `TODAY` | `TODAY()` | Returns serial number of current date |
-| `NOW` | `NOW()` | Returns serial number of current date and time |
-| `DATE` | `DATE(year, month, day)` | Creates date serial number from year, month, and day |
-| `DATEVALUE` | `DATEVALUE(date_text)` | Converts date text (e.g. \ |
-| `TIME` | `TIME(hour, minute, second)` | Creates time decimal fraction (0.0..1.0) from hour, min, sec |
-| `TIMEVALUE` | `TIMEVALUE(time_text)` | Converts time text (e.g. \ |
-| `DATEDIF` | `DATEDIF(start_date, end_date, unit)` | Calculates difference between two dates (unit: \ |
-| `DAYS` | `DAYS(end_date, start_date)` | Returns number of days between two dates |
-| `DAYS360` | `DAYS360(start_date, end_date)` | Calculates difference based on a 360-day year (12 months of 30 days) |
-| `NETWORKDAYS` | `NETWORKDAYS(start_date, end_date, [holidays])` | Returns number of working days between two dates |
-| `WORKDAY` | `WORKDAY(start_date, days, [holidays])` | Returns date before or after specified number of workdays |
-| `YEARFRAC` | `YEARFRAC(start_date, end_date)` | Calculates fraction of year represented by number of whole days |
-| `YEAR` | `YEAR(serial_date)` | Extracts 4-digit year from date serial |
-| `MONTH` | `MONTH(serial_date)` | Extracts month number (1..12) from date serial |
-| `DAY` | `DAY(serial_date)` | Extracts day of month (1..31) from date serial |
-| `HOUR` | `HOUR(time_serial)` | Extracts hour (0..23) from time serial |
-| `MINUTE` | `MINUTE(time_serial)` | Extracts minute (0..59) from time serial |
-| `SECOND` | `SECOND(time_serial)` | Extracts second (0..59) from time serial |
-| `WEEKDAY` | `WEEKDAY(serial_date, [type])` | Returns weekday number (1=Sun..7=Sat, or 1=Mon..7=Sun) |
-| `WEEKNUM` | `WEEKNUM(serial_date)` | Returns week number of the year (1..53) |
-| `EDATE` | `EDATE(start_date, months)` | Returns date serial n months before or after start date |
-| `EOMONTH` | `EOMONTH(start_date, months)` | Returns last day of month n months before or after start date |
+| Function | Syntax | Parameters | Summary |
+|:---|:---|:---|:---|
+| `TODAY` | `TODAY()` | —(no arguments)— | Returns serial number of current date |
+| `NOW` | `NOW()` | —(no arguments)— | Returns serial number of current date and time |
+| `DATE` | `DATE(year, month, day)` | `year`: four-digit year<br>`month`: month number (1–12)<br>`day`: day of month (1–31) | Creates date serial number from year, month, and day |
+| `DATEVALUE` | `DATEVALUE(date_text)` | `date_text`: date written as text | Converts date text (e.g. "2026/01/01", "2026JANUARY1") to serial number |
+| `TIME` | `TIME(hour, minute, second)` | `hour`: hour (0–23)<br>`minute`: minute (0–59)<br>`second`: second (0–59) | Creates time decimal fraction (0.0..1.0) from hour, min, sec |
+| `TIMEVALUE` | `TIMEVALUE(time_text)` | `time_text`: time written as text | Converts time text (e.g. "14:30:00") to time fraction (0.0..1.0) |
+| `DATEDIF` | `DATEDIF(start_date, end_date, unit)` | `start_date`: starting date (serial or date value)<br>`end_date`: ending date (serial or date value)<br>`unit`: difference unit: "Y","M","D","YM","YD","MD" | Calculates difference between two dates (unit: "Y", "M", "D", "YM", "YD", "MD") |
+| `DAYS` | `DAYS(end_date, start_date)` | `end_date`: ending date (serial or date value)<br>`start_date`: starting date (serial or date value) | Returns number of days between two dates |
+| `DAYS360` | `DAYS360(start_date, end_date)` | `start_date`: starting date (serial or date value)<br>`end_date`: ending date (serial or date value) | Calculates difference based on a 360-day year (12 months of 30 days) |
+| `NETWORKDAYS` | `NETWORKDAYS(start_date, end_date, [holidays])` | `start_date`: starting date (serial or date value)<br>`end_date`: ending date (serial or date value)<br>`holidays` (optional): optional range of holiday dates to exclude | Returns number of working days between two dates |
+| `WORKDAY` | `WORKDAY(start_date, days, [holidays])` | `start_date`: starting date (serial or date value)<br>`days`: number of (work)days to add/subtract<br>`holidays` (optional): optional range of holiday dates to exclude | Returns date before or after specified number of workdays |
+| `YEARFRAC` | `YEARFRAC(start_date, end_date)` | `start_date`: starting date (serial or date value)<br>`end_date`: ending date (serial or date value) | Calculates fraction of year represented by number of whole days |
+| `YEAR` | `YEAR(serial_date)` | `serial_date`: date serial number (or date-valued cell) | Extracts 4-digit year from date serial |
+| `MONTH` | `MONTH(serial_date)` | `serial_date`: date serial number (or date-valued cell) | Extracts month number (1..12) from date serial |
+| `DAY` | `DAY(serial_date)` | `serial_date`: date serial number (or date-valued cell) | Extracts day of month (1..31) from date serial |
+| `HOUR` | `HOUR(time_serial)` | `time_serial`: time serial (fraction of a day) or datetime | Extracts hour (0..23) from time serial |
+| `MINUTE` | `MINUTE(time_serial)` | `time_serial`: time serial (fraction of a day) or datetime | Extracts minute (0..59) from time serial |
+| `SECOND` | `SECOND(time_serial)` | `time_serial`: time serial (fraction of a day) or datetime | Extracts second (0..59) from time serial |
+| `WEEKDAY` | `WEEKDAY(serial_date, [type])` | `serial_date`: date serial number (or date-valued cell)<br>`type` (optional): payment timing (0=end, 1=beginning) or WEEKDAY return style<br>type selects numbering (e.g. 1=Sun…7=Sat, or Mon-based variants 11–17). | Returns weekday number (1=Sun..7=Sat, or 1=Mon..7=Sun) |
+| `WEEKNUM` | `WEEKNUM(serial_date)` | `serial_date`: date serial number (or date-valued cell) | Returns week number of the year (1..53) |
+| `EDATE` | `EDATE(start_date, months)` | `start_date`: starting date (serial or date value)<br>`months`: months to shift (can be negative) | Returns date serial n months before or after start date |
+| `EOMONTH` | `EOMONTH(start_date, months)` | `start_date`: starting date (serial or date value)<br>`months`: months to shift (can be negative) | Returns last day of month n months before or after start date |
 
 ### Financial
 
-| Function | Syntax | Description |
-|:---|:---|:---|
-| `PMT` | `PMT(rate, nper, pv, [fv], [type])` | Calculates periodic loan payment with constant interest rate |
-| `PV` | `PV(rate, nper, pmt, [fv], [type])` | Calculates present value of an investment/loan |
-| `FV` | `FV(rate, nper, pmt, [pv], [type])` | Calculates future value of an investment with periodic payments |
-| `NPV` | `NPV(rate, val1, [val2]...)` | Calculates net present value using discount rate and cash flows |
-| `IRR` | `IRR(values, [guess])` | Calculates internal rate of return for a series of cash flows |
-| `RATE` | `RATE(nper, pmt, pv, [fv], [type])` | Calculates interest rate per period of an annuity |
-| `NPER` | `NPER(rate, pmt, pv, [fv], [type])` | Returns number of periods for an investment/loan |
-| `SLN` | `SLN(cost, salvage, life)` | Returns straight-line depreciation of an asset for one period |
-| `SYD` | `SYD(cost, salvage, life, per)` | Returns sum-of-years' digits depreciation for specified period |
-| `DDB` | `DDB(cost, salvage, life, period, [factor])` | Returns double-declining balance depreciation of an asset |
+| Function | Syntax | Parameters | Summary |
+|:---|:---|:---|:---|
+| `PMT` | `PMT(rate, nper, pv, [fv], [type])` | `rate`: interest / discount rate per period<br>`nper`: number of payment periods<br>`pv`: present value<br>`fv` (optional): future value (optional; default 0)<br>`type` (optional): payment timing (0=end, 1=beginning) or WEEKDAY return style<br>type: 0=payment at period end (default), 1=at beginning. | Calculates periodic loan payment with constant interest rate |
+| `PV` | `PV(rate, nper, pmt, [fv], [type])` | `rate`: interest / discount rate per period<br>`nper`: number of payment periods<br>`pmt`: payment amount per period<br>`fv` (optional): future value (optional; default 0)<br>`type` (optional): payment timing (0=end, 1=beginning) or WEEKDAY return style<br>type: 0=end of period (default), 1=beginning. | Calculates present value of an investment/loan |
+| `FV` | `FV(rate, nper, pmt, [pv], [type])` | `rate`: interest / discount rate per period<br>`nper`: number of payment periods<br>`pmt`: payment amount per period<br>`pv` (optional): present value<br>`type` (optional): payment timing (0=end, 1=beginning) or WEEKDAY return style<br>type: 0=end of period (default), 1=beginning. | Calculates future value of an investment with periodic payments |
+| `NPV` | `NPV(rate, val1, [val2]...)` | `rate`: interest / discount rate per period<br>`val1`: value / choice in a list<br>`val2` (repeatable): additional value in a list | Calculates net present value using discount rate and cash flows |
+| `IRR` | `IRR(values, [guess])` | `values`: range of cash-flow values<br>`guess` (optional): optional starting guess for IRR | Calculates internal rate of return for a series of cash flows |
+| `RATE` | `RATE(nper, pmt, pv, [fv], [type])` | `nper`: number of payment periods<br>`pmt`: payment amount per period<br>`pv`: present value<br>`fv` (optional): future value (optional; default 0)<br>`type` (optional): payment timing (0=end, 1=beginning) or WEEKDAY return style<br>type: 0=end of period (default), 1=beginning. | Calculates interest rate per period of an annuity |
+| `NPER` | `NPER(rate, pmt, pv, [fv], [type])` | `rate`: interest / discount rate per period<br>`pmt`: payment amount per period<br>`pv`: present value<br>`fv` (optional): future value (optional; default 0)<br>`type` (optional): payment timing (0=end, 1=beginning) or WEEKDAY return style<br>type: 0=end of period (default), 1=beginning. | Returns number of periods for an investment/loan |
+| `SLN` | `SLN(cost, salvage, life)` | `cost`: initial asset cost<br>`salvage`: value at end of life<br>`life`: useful life in periods | Returns straight-line depreciation of an asset for one period |
+| `SYD` | `SYD(cost, salvage, life, per)` | `cost`: initial asset cost<br>`salvage`: value at end of life<br>`life`: useful life in periods<br>`per`: period number for which depreciation is calculated | Returns sum-of-years' digits depreciation for specified period |
+| `DDB` | `DDB(cost, salvage, life, period, [factor])` | `cost`: initial asset cost<br>`salvage`: value at end of life<br>`life`: useful life in periods<br>`period`: period number<br>`factor` (optional): declining-balance factor (optional; often 2) | Returns double-declining balance depreciation of an asset |
 
 ### Aliases (also accepted)
 
