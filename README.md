@@ -1,94 +1,98 @@
 # HasuCalc (Modern Terminal Spreadsheet in Go)
 
-DOS / PC-98時代のクラシックなターミナル表計算ソフトのレトロな美しさ・配色・グラフ描画を再現しつつ、**現代的な快適操作（Shift+矢印選択、Ctrl+C/V/S、Ctrl+Kコマンドパレット、`=SUM(A1:B10)` 記法）** を融合した高速ターミナル表計算ソフトです。
+> **Languages:** English (canonical) · [日本語](README.ja.md)  
+> Full specification: [SPECIFICATION.md](SPECIFICATION.md) ([日本語](SPECIFICATION.ja.md))
 
-**Excel 互換アプリではありません。** 正本はネイティブ形式（`.hwk` / `.hwkz`）です。`.xlsx` / `.ods` の入出力は、他ソフトと表データをやり取りするための利便機能にすぎません。
+A fast terminal spreadsheet that keeps the look, colors, and charting feel of classic DOS / PC-98 sheet apps, while adding modern editing comfort (Shift+arrow selection, Ctrl+C/V/S, Ctrl+K command palette, `=SUM(A1:B10)` formulas).
 
-Go言語で実装されており、CGO不要の**単一実行可能バイナリ (`hasucalc`)** として動作します。
+**This is not an Excel-compatible application.** The native formats (`.hwk` / `.hwkz`) are authoritative. `.xlsx` / `.ods` I/O is only a convenience bridge for exchanging tabular data with other software.
+
+Implemented in Go as a **single, CGO-free binary (`hasucalc`)**.
 
 ---
 
-## 🚀 起動方法
+## Getting started
 
 ```bash
 cd ~/hasucalc
 
-# 起動（新規空白シートで起動）
+# Start with a blank sheet
 ./hasucalc
 
-# デモデータ＆グラフ設定済みで起動
+# Demo data and chart settings
 ./hasucalc --demo
-# または
+# or
 ./hasucalc -d
 
-# ファイルを指定して起動
+# Open a file
 ./hasucalc my_sheet.hwk
 ./hasucalc data.csv
 ```
 
 ---
 
-## ✨ モダン機能 & 操作一覧
+## Features & keybindings
 
-### 1. 直感的なキーボード操作 & 範囲選択
+### 1. Keyboard & selection
 
-| キー | 機能 | 説明 |
+| Key | Action | Notes |
 |:---|:---|:---|
-| **`Ctrl + Z`** | **Undo (元に戻す)** | セル編集・貼り付けに加え、シート追加/削除/改名も取り消す |
-| **`Ctrl + Y`** | **Redo (やり直し)** | Undoで取り消した操作をやり直す |
-| **`Shift + 矢印キー`** | **ビジュアル範囲選択** | 矩形範囲を青色ハイライトで選択 |
-| **`Ctrl + C`** | **コピー** | 選択範囲またはカレントセルをクリップボードにコピー |
-| **`Ctrl + V`** | **貼り付け** | クリップボードから貼り付け（コピー時は相対数式をシフト、切り取り時は参照を維持） |
-| **`Ctrl + L`** | **リンク貼り付け** | `=A1` / `=Sheet!A1` 形式の参照を貼り付け |
-| **`Ctrl + X`** | **切り取り** | 選択範囲を切り取り（貼り付け時は数式の相対シフトなし） |
-| **`Ctrl + K` (または `:`)** | **コマンドパレット** | VS Code風のファジー検索ウィンドウを開く |
-| **`Ctrl + S`** | **保存 (Save)** | ディレクトリブラウザ＆ファイル保存ダイアログを開く |
-| **`Ctrl + O`** | **開く (Open)** | ディレクトリブラウザ＆ファイル選択ダイアログを開く |
-| **`Ctrl + F`** | **検索** | シート内（またはブック横断）検索 |
-| **`Ctrl + H`** | **置換** | 検索と置換 |
-| **`F3` / `Shift+F3`** | **次/前を検索** | 直前の検索語で移動 |
-| **`Ctrl + G` (または `F5`)** | **GOTO** | 指定セル番地（`B20`, `XFD1048576`等）へジャンプ |
-| **`Ctrl + A`** | **全選択** | データ領域全体を選択 |
-| **`Ctrl + T`** | **シート切替** | シート一覧モーダルを開く |
-| **`Ctrl + PgUp` / `Ctrl + PgDn`** | **シート移動** | 前後のシートへ切替 |
-| **`Alt + =`** | **AutoSum** | 選択範囲の外側に `=SUM()` を自動挿入 |
-| **`Delete` / `Backspace`** | **クリア** | 選択範囲またはカレントセルを消去 |
-| **`Esc`** | **キャンセル** | 選択解除 / メニュー・ポップアップを閉じる |
-| **`F1`** | **ヘルプ** | 操作説明・キー一覧・関数一覧の表示 |
-| **`F2` / `Ctrl + E`** | **セル編集 (Edit)** | 上から2行目の数式バーで選択中セルの内容を直接編集 |
-| **`F9`** | **再計算** | ブック内の全シートを再計算 |
-| **`F10`** | **グラフ表示** | 全画面ターミナルグラフ（折れ線・棒・円グラフ）を描画 / SキーでPNG保存 |
-| **`Ctrl + Q`** | **終了 (Quit)** | アプリケーション終了（未保存の変更がある場合は保存確認ダイアログを表示） |
-| **`/` (スラッシュ)** | **トップメニュー** | 1文字キー（例: `/FS` でSave、`/FO` でOpen、`/HU` でUndo、`/VF` で枠固定）または矢印で選択 |
+| **`Ctrl + Z`** | **Undo** | Cell edits, paste, and sheet add/delete/rename |
+| **`Ctrl + Y`** | **Redo** | Redo the last undo |
+| **`Shift + arrows`** | **Range select** | Blue highlight rectangle |
+| **`Ctrl + C`** | **Copy** | Selection or current cell |
+| **`Ctrl + V`** | **Paste** | Relative formula shift on copy; cut keeps refs |
+| **`Ctrl + L`** | **Paste link** | Paste `=A1` / `=Sheet!A1` style refs |
+| **`Ctrl + X`** | **Cut** | No relative shift on paste |
+| **`Ctrl + K` (or `:`)** | **Command palette** | Fuzzy search like VS Code |
+| **`Ctrl + S`** | **Save** | Directory browser + save dialog |
+| **`Ctrl + O`** | **Open** | Directory browser + open dialog |
+| **`Ctrl + F`** | **Find** | In-sheet (or workbook) search |
+| **`Ctrl + H`** | **Replace** | Find and replace |
+| **`F3` / `Shift+F3`** | **Find next/prev** | Repeat last search |
+| **`Ctrl + G` (or `F5`)** | **Goto** | Jump to `B20`, `XFD1048576`, etc. |
+| **`Ctrl + A`** | **Select all** | Select the used data region |
+| **`Ctrl + T`** | **Sheet picker** | Sheet list modal |
+| **`Ctrl + PgUp` / `Ctrl + PgDn`** | **Prev/next sheet** | Switch sheets |
+| **`Alt + =`** | **AutoSum** | Insert `=SUM()` outside the selection |
+| **`Delete` / `Backspace`** | **Clear** | Clear selection or current cell |
+| **`Esc`** | **Cancel** | Clear selection / close menus |
+| **`F1`** | **Help** | Keys and function list |
+| **`F2` / `Ctrl + E`** | **Edit** | Edit in the formula bar (row 2) |
+| **`F9`** | **Recalculate** | Recalculate all sheets |
+| **`F10`** | **Chart** | Full-screen terminal chart; `S` saves PNG |
+| **`Ctrl + Q`** | **Quit** | Confirms if there are unsaved changes |
+| **`/`** | **Slash menu** | One-letter paths (e.g. `/FS` Save, `/FO` Open, `/HU` Undo, `/VF` Freeze) or arrows |
 
 ---
 
-### 2. コマンドパレット (`Ctrl + K` / `:`)
+### 2. Command palette (`Ctrl + K` / `:`)
 
-`Ctrl + K` を押すと画面中央に検索ウィンドウが開き、インクリメンタル検索でコマンドを実行できます：
+Incremental search in a centered window, for example:
+
 - `sum` → `AutoSum (=SUM)`
 - `average` → `Average (=AVERAGE)`
-- `currency` → `通貨フォーマット`（前置記号は任意文字列・セルごとに指定可。未指定は `$`）
-- `percent` → `パーセントフォーマット (12.3%)`
-- `graph` → `グラフ表示 (F10)`
-- `sort asc` → `昇順ソート`
-- `csv export` → `CSVエクスポート`
+- `currency` → Currency format (any prefix string per cell; default `$`)
+- `percent` → Percent format (`12.3%`)
+- `graph` → Chart view (`F10`)
+- `sort asc` → Sort ascending
+- `csv export` → Export CSV
 
 ---
 
-### 3. 数式 & 範囲記法
+### 3. Formulas & ranges
 
-- **現代的な数式記法**（Excel で馴染みのある書き方も受理）:
+- Familiar `=` formulas (accepted for convenience, not as “Excel compatibility”):
   - `=SUM(A1:B10)`, `=AVERAGE(A1:A10)`, `=A1+B1*2`, `=IF(A1>50, "OK", "NG")`
-  - 識別子 `TRUE` / `FALSE` は真偽値（数値文脈では 1 / 0）。`ISLOGICAL` は真偽値のみ真
-- **クラシック記法対応**:
+  - Identifiers `TRUE` / `FALSE` are booleans (1 / 0 in numeric context). `ISLOGICAL` is true only for booleans
+- Classic / Lotus-style:
   - `+A1+B1`, `@SUM(A1..B10)`, `@VLOOKUP(A1, B1..D10, 2)`
-- **セル範囲**: コロン `:` と ピリオド2つ `..` の両方をサポート（空白入り `A1 : B10` も可）
-- **クロスシート**: `=Sheet2!A1` など。編集時はブック全体を自動再計算
-- **シート規模**: 最大 **1,048,576行 × 16,384列 (`A`〜`XFD`)**（空行はメモリを食わない疎行列）
+- Ranges: both `:` and `..` (spaces like `A1 : B10` OK)
+- Cross-sheet: `=Sheet2!A1`; workbook auto-recalc while editing
+- Grid size: up to **1,048,576 rows × 16,384 columns (`A`–`XFD`)** (sparse; empty rows cost no memory)
 
 ---
 
-## 📖 詳細ドキュメント
+## Documentation
 
-システムの全体アーキテクチャ、70種以上の関数仕様、非圧縮 Compact `.hwk` フォーマット、PNG画像エクスポート、および全開発作業経緯については、[SPECIFICATION.md](SPECIFICATION.md) をご参照ください。
+Architecture, function coverage, compact `.hwk` format, PNG export, and development history: **[SPECIFICATION.md](SPECIFICATION.md)** (Japanese: [SPECIFICATION.ja.md](SPECIFICATION.ja.md)).

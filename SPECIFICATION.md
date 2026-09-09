@@ -1,371 +1,304 @@
-# HasuCalc 2.0 詳細仕様書 & 開発作業経緯書
+# HasuCalc 2.0 — Specification & Development History
 
-本書は、モダンターミナル表計算ソフトウェア **「HasuCalc 2.0」** の最新アーキテクチャ、機能仕様、ユーザーインターフェース、メニュー体系、および開発経緯を包括的にまとめた公式ドキュメントです。
+> **Languages:** English (canonical) · [日本語](SPECIFICATION.ja.md)  
+> Overview: [README.md](README.md) ([日本語](README.ja.md))  
+> If translations disagree, this English document wins.
 
----
-
-## 目次
-
-1. [プロジェクト概要 & 設計思想](#1-プロジェクト概要--設計思想)
-   - [1.4 仕様の契約（何が不具合で、何が仕様差か）](#14-仕様の契約何が不具合で何が仕様差か)
-2. [システムアーキテクチャ & パッケージ構成](#2-システムアーキテクチャ--パッケージ構成)
-3. [機能仕様詳細](#3-機能仕様詳細)
-   - [3.1 セル・シート・ワークブック仕様](#31-セルシートワークブック仕様)
-   - [3.2 数式・計算エンジン仕様](#32-数式計算エンジン仕様)
-   - [3.3 ユーザーインターフェース & キーバインド仕様](#33-ユーザーインターフェース--キーバインド仕様)
-   - [3.4 ネイティブマウス操作仕様](#34-ネイティブマウス操作仕様)
-   - [3.5 スラッシュメニュー体系 (/)](#35-スラッシュメニュー体系-)
-   - [3.6 検索・置換・ジャンプ仕様](#36-検索置換ジャンプ仕様)
-   - [3.7 ウィンドウ枠の固定仕様 (Freeze-Panes)](#37-ウィンドウ枠の固定仕様-freeze-panes)
-   - [3.8 連続データ作成 & 行列入替仕様 (AutoFill & Transpose)](#38-連続データ作成--行列入替仕様-autofill--transpose)
-   - [3.9 グラフ描画 & 高品位PNG画像エクスポート仕様](#39-グラフ描画--高品位png画像エクスポート仕様)
-   - [3.10 ファイルフォーマット & I/O仕様](#310-ファイルフォーマット--io仕様)
-   - [3.11 ファイルピッカー & 保存ダイアログ仕様](#311-ファイルピッカー--保存ダイアログ仕様)
-   - [3.12 多言語・多文字体系レンダリング仕様](#312-多言語多文字体系レンダリング仕様)
-4. [開発作業経緯 (フェーズ別クロニクル)](#4-開発作業経緯-フェーズ別クロニクル)
-5. [テスト & 品質保証](#5-テスト--品質保証)
+Official documentation for the modern terminal spreadsheet **HasuCalc 2.0**: architecture, features, UI, menus, and development chronicle.
 
 ---
 
-## 1. プロジェクト概要 & 設計思想
+## Contents
 
-### 1.1 概要
-**HasuCalc (ハスカルク)** は、Go言語でフルスクラッチ開発された高速かつ軽量なターミナル表計算ソフトウェア（CLI / TUI Spreadsheet）です。CGO非依存の完全単一バイナリとして動作し、Mac / Linux / Windows のあらゆるターミナル環境で瞬時に起動します。
+1. [Overview & design](#1-overview--design)
+   - [1.4 Spec contract (bugs vs intentional differences)](#14-spec-contract-bugs-vs-intentional-differences)
+2. [Architecture & packages](#2-architecture--packages)
+3. [Feature specification](#3-feature-specification)
+   - [3.1 Cells, sheets, workbooks](#31-cells-sheets-workbooks)
+   - [3.2 Formula engine](#32-formula-engine)
+   - [3.3 UI & keybindings](#33-ui--keybindings)
+   - [3.4 Native mouse](#34-native-mouse)
+   - [3.5 Slash menus (/)](#35-slash-menus-)
+   - [3.6 Find, replace, goto](#36-find-replace-goto)
+   - [3.7 Freeze panes](#37-freeze-panes)
+   - [3.8 AutoFill & transpose](#38-autofill--transpose)
+   - [3.9 Charts & PNG export](#39-charts--png-export)
+   - [3.10 File formats & I/O](#310-file-formats--io)
+   - [3.11 File picker & save dialog](#311-file-picker--save-dialog)
+   - [3.12 Multilingual typography](#312-multilingual-typography)
+4. [Development chronicle](#4-development-chronicle)
+5. [Testing & QA](#5-testing--qa)
 
-**Excel 互換アプリではない。** 正本は HasuCalc 自身のモデルと `.hwk` / `.hwkz` である。`.xlsx` / `.ods` は他ソフトと表データをやり取りするための**利便用ブリッジ**であり、Excel / LibreOffice の機能や表示の再現を目標にしない。
+---
 
-### 1.2 コア設計思想
-1. **モダン操作性とレトロTUIの高度な融合**:
-   - PC-98 / DOS時代のクラシックなターミナル画面の視認性と高速レスポンスを継承しつつ、馴染みやすい範囲選択、`Ctrl+C/X/V/Z/Y`、VS Code風の `Ctrl+K` コマンドパレット、ネイティブマウス操作を統合。
-2. **疎行列（Sparse Matrix）ベースの超スケーラブル設計**:
-   - 最大 **1,048,576行 × 16,384列 (`A`〜`XFD`)** をサポートしながら、使用しているセルのみメモリを消費するゼロフットプリント設計。
-3. **現代AI（LLM）親和性 & Git親和性の最優先**:
-   - デフォルト保存形式（`.hwk`）は非圧縮のコンパクトJSONを採用。AIエージェントやCLIツール（`cat`, `grep`, `jq`, Python）が解凍不要で直接読み書きでき、`git diff` でセル単位の変更差分を1行で追跡可能。
-4. **自己完結型・ゼロ外部依存の画像出力**:
-   - ImageMagickやgnuplotなどの外部ツールを一切使わず、Goのネイティブグラフィックスとシステム日本語フォント（TrueType/OpenType）による 1280×720 HD品質のPNG画像出力を実現。
+## 1. Overview & design
 
-### 1.3 CLI コマンドライン起動オプション
+### 1.1 Overview
+**HasuCalc** is a fast, lightweight terminal spreadsheet (CLI / TUI) written from scratch in Go. It ships as a fully self-contained, CGO-free binary and starts quickly on macOS, Linux, and Windows terminals.
+
+**Not an Excel-compatible app.** The authoritative model is HasuCalc’s own model and `.hwk` / `.hwkz`. `.xlsx` / `.ods` are **convenience bridges** for exchanging tabular data; reproducing Excel / LibreOffice features or layout is not a goal.
+
+### 1.2 Core design principles
+1. **Modern editing + retro TUI**: Keep PC-98 / DOS clarity and speed while adding familiar selection, `Ctrl+C/X/V/Z/Y`, a VS Code-like `Ctrl+K` palette, and native mouse support.
+2. **Sparse-matrix scale**: Up to **1,048,576 × 16,384 (`A`–`XFD`)** while allocating only for used cells.
+3. **LLM- and Git-friendly storage**: Default `.hwk` is compact uncompressed JSON—readable by `cat`, `grep`, `jq`, Python, and agents; `git diff` can track cell changes line-by-line.
+4. **Self-contained image output**: HD PNG (1280×720) via Go graphics and system fonts (TrueType/OpenType)—no ImageMagick / gnuplot.
+
+### 1.3 CLI options
 ```bash
-hasucalc [file]         # 表ファイル (.hwk, .hwkz, .xlsx, .ods, .csv) を直接開く
-hasucalc --demo, -d     # サンプルデータ & グラフ設定済みデモ画面で起動
-hasucalc --version, -v  # バージョン情報 (HasuCalc 2.0.2, Go runtime, OS/Arch) を表示
-hasucalc --help, -h     # コマンドラインヘルプを表示
+hasucalc [file]         # Open .hwk, .hwkz, .xlsx, .ods, .csv
+hasucalc --demo, -d     # Demo sheet with chart settings
+hasucalc --version, -v  # Version (HasuCalc 2.0.2, Go runtime, OS/Arch)
+hasucalc --help, -h     # Help
 ```
 
-### 1.4 仕様の契約（何が不具合で、何が仕様差か）
+### 1.4 Spec contract (bugs vs intentional differences)
 
-HasuCalc は Excel の複製でも互換製品でもない。**本書に書いた動きと実装が食い違うものだけを不具合とする。** 書いていない Excel / LibreOffice との差は仕様差であり、直す対象ではない。
+HasuCalc is neither a clone nor a compatibility product for Excel. **Only mismatches between this document and the implementation are bugs.** Differences from Excel / LibreOffice that are not written here are intentional and are not fix targets.
 
-記法は Lotus 1-2-3 系と、馴染みのある `=` / `A1:B10` 系を**両方受け付ける**（後者は利便のためであり「Excel 互換」を意味しない）。評価結果・エラー表示・I/O の範囲は、次の帰属に従う。
+Lotus 1-2-3-style and familiar `=` / `A1:B10` notation are **both accepted** (the latter for convenience—not “Excel compatibility”). Evaluation, errors, and I/O scope follow the tables below.
 
-#### 保証する（コア。ここが壊れたら不具合）
+#### Guaranteed (core — breakage here is a bug)
 
-* 疎行列グリッド（最大 1,048,576×16,384、使用セルのみ保持）。
-* セル型 NUMBER / LABEL / FORMULA / BOOLEAN / EMPTY と、入力プレフィックス（§3.1）。
-* 数式の字句・構文・評価、循環参照検知、AUTO 時のブック再計算。
-* 行・列の挿入削除、切取／コピー／貼付、シート改名・削除に伴う**参照の追従**（壊れたら `#REF!` またはクォート付きシート名）。
-* ネイティブ `.hwk` / `.hwkz` の往復で、セル値・数式・名前・グラフ設定・再計算モードが失われない。
-* XLSX / ODS の往復で、**表データ**（セル・数式・名前・固定枠・再計算モード）が壊れない。文字列リテラルと `value-type="string"` は再解釈しない。これらは利便用ブリッジであり、Excel / LibreOffice 側の全機能・表示・チャートの再現は保証しない。
-* `ROW()` / `COLUMN()`（引数なし）は、その数式が入っているセル自身の行／列を返す。
+* Sparse grid (max 1,048,576×16,384; store used cells only).
+* Cell types NUMBER / LABEL / FORMULA / BOOLEAN / EMPTY and input prefixes (§3.1).
+* Formula lexing / parsing / evaluation, circular-ref detection, workbook recalc in AUTO mode.
+* Reference retargeting on row/column insert/delete, cut/copy/paste, and sheet rename/delete (broken refs become `#REF!` or quoted sheet names).
+* Native `.hwk` / `.hwkz` round-trip preserves values, formulas, names, chart settings, and recalc mode.
+* XLSX / ODS round-trip preserves **tabular data** (cells, formulas, names, freeze panes, recalc mode). String literals and `value-type="string"` are not re-interpreted. These bridges do **not** guarantee Excel / LibreOffice features, display, or charts.
+* Argument-less `ROW()` / `COLUMN()` return the formula cell’s own row / column.
 
-#### Lotus 1-2-3 系（意図的。Excel と違ってよい）
+#### Lotus 1-2-3 family (intentional; may differ from Excel)
 
-| 項目 | HasuCalc の動き |
+| Topic | HasuCalc behavior |
 |---|---|
-| 数式プレフィックス | `@SUM(A1..A10)`、行頭 `+` も数式 |
-| 範囲 | `A1..B10`（`A1:B10` も可） |
-| 論理演算 | `#AND#` / `#OR#` / `#NOT#` |
-| 関数の別名 | `AVG`=`AVERAGE`、`PAYMT`=`PMT`、`LENGTH`=`LEN`、`REPEAT`=`REPT`、`MULTIPLY`=`PRODUCT`、`STD`=`STDEV.P`、`STRING`（Lotus の文字列化） |
-| 書式 | 指数の `(S2)` は `(E2)` の別名 |
-| エラー表示 | 汎用は `ERR`、未発見・欠落は `NA`、循環は `CIRCULAR REF`。Excel の `#VALUE!` / `#NUM!` / `#DIV/0!` には**分けない** |
-| `FIND` / `SEARCH` 未発見 | `NA`（Excel は `#VALUE!`）。`ISERR` は NA を除外する |
-| 関数 `ERR()` / `NA()` | 明示的にそれぞれのエラーを返す |
+| Formula prefix | `@SUM(A1..A10)`; leading `+` is also a formula |
+| Ranges | `A1..B10` (`A1:B10` also OK) |
+| Logical ops | `#AND#` / `#OR#` / `#NOT#` |
+| Aliases | `AVG`=`AVERAGE`, `PAYMT`=`PMT`, `LENGTH`=`LEN`, `REPEAT`=`REPT`, `MULTIPLY`=`PRODUCT`, `STD`=`STDEV.P`, `STRING` (Lotus stringify) |
+| Format | Scientific `(S2)` is an alias of `(E2)` |
+| Errors | Generic `ERR`, missing `NA`, circular `CIRCULAR REF` — **not** split into Excel `#VALUE!` / `#NUM!` / `#DIV/0!` |
+| `FIND` / `SEARCH` miss | `NA` (Excel: `#VALUE!`). `ISERR` excludes NA |
+| `ERR()` / `NA()` | Explicitly return those errors |
 
-#### Excel / OpenFormula 系の記法（寄せる。互換製品ではない）
+#### Excel / OpenFormula-style notation (accepted; not a compatibility product)
 
-馴染みのある書き方を受理し、実装した関数については近い結果を目指す。**「Excel と同じ」ことは契約しない。**
+Familiar syntax is accepted; implemented functions aim for nearby results. **“Same as Excel” is not a contract.**
 
-| 項目 | HasuCalc の動き |
+| Topic | HasuCalc behavior |
 |---|---|
-| 数式プレフィックス | `=` |
-| 範囲 | `A1:B10`、全列 `A:A`、シート `Sheet2!A1`、必要なら `'Q1-2024'!A1` |
-| 単項マイナスと `^` | `-2^2` = `(-2)^2` = **4**（`-4` は `-(2^2)`） |
-| 真偽 | `TRUE` / `FALSE` / `TRUE()` / `FALSE()`。数値文脈は 1 / 0 |
-| `SUMIF` の第3引数 | 条件範囲と同じ形に、左上を起点に拡張する |
-| 日付シリアル・主要関数 | 実装した関数については Excel に近い結果（`TIME` の 24h 折り返し、`DAYS360` US の月末規則など） |
-| グリッド規模 | `A`〜`XFD`、行 `1048576` |
-| 操作 | 範囲選択、`Ctrl+C/X/V/Z/Y`、固定枠、名前付き範囲 |
+| Prefix | `=` |
+| Ranges | `A1:B10`, whole column `A:A`, sheet `Sheet2!A1`, quoted `'Q1-2024'!A1` when needed |
+| Unary minus vs `^` | `-2^2` = `(-2)^2` = **4** (use `-(2^2)` for `-4`) |
+| Booleans | `TRUE` / `FALSE` / `TRUE()` / `FALSE()`; numeric context 1 / 0 |
+| `SUMIF` 3rd arg | Expanded from the top-left to match criteria shape |
+| Date serials / major functions | Near Excel for implemented cases (`TIME` 24h wrap, US `DAYS360` end-of-month rules, etc.) |
+| Grid | `A`–`XFD`, rows to `1048576` |
+| UX | Selection, `Ctrl+C/X/V/Z/Y`, freeze panes, named ranges |
 
-関数名は Excel 側を正本とし、Lotus 別名は受理するだけとする。
+Excel function names are canonical; Lotus aliases are accepted only.
 
-#### HasuCalc 固有（他ソフトに合わせない）
+#### HasuCalc-specific (do not match other apps)
 
-* **ネイティブ形式**は `.hwk`（JSON）と `.hwkz`（gzip）。Git / LLM が読めることを優先する。
-* **グラフ**はシートあたり 1 つ、系列 A〜F。端末描画と PNG（1280×720）。**XLSX / ODS のチャートは読まない・書かない**（§3.9）。
-* ラベル寄せは `'`（左）、`"`（右）、`^`（中央）。繰り返し塗りは `\`。
-* 通貨記号は**セルごとに任意の文字列**を前置できる（ホワイトリストなし。`$` / `¥` / `€` / `£` / `USD ` など）。未指定・空は `$`。後ろ付けや桁区切りの国別ロケールは対象外。
-* 全列／巨大範囲の走査は **used range** までに切る。
-* TUI（tcell）、スラッシュメニュー、`Ctrl+K` パレット、Markdown 書き出し。
-* `%` は**数値リテラル直後だけ**百分率にする（`50%` → 0.5）。`=A1%` は数式として受理しない。
-* 再計算 MANUAL 時、行列挿入で数式テキストは更新するが、表示値は次の再計算まで残す。
+* **Native formats** `.hwk` (JSON) and `.hwkz` (gzip); prefer Git/LLM readability.
+* **Charts**: one per sheet, series A–F; terminal draw + PNG (1280×720). **No XLSX/ODS chart I/O** (§3.9).
+* Label alignment: `'` left, `"` right, `^` center; fill with `\`.
+* Currency: **any** per-cell prefix string (no whitelist: `$` / `¥` / `€` / `£` / `USD `, …). Empty → `$`. No suffix currencies or locale grouping like `1.234,56`.
+* Whole-column / huge ranges are clipped to the **used range**.
+* TUI (tcell), slash menus, `Ctrl+K` palette, Markdown export.
+* `%` is a percent **only immediately after a numeric literal** (`50%` → 0.5). `=A1%` is not accepted as a formula.
+* In MANUAL recalc, insert/delete updates formula text but display values wait for the next recalc.
 
-#### 対象外（実装しない。欠落を不具合と呼ばない）
+#### Out of scope (missing features are not bugs)
 
-* VBA / マクロ、ピボット、条件付き書式、結合セル、コメント、入力規則。
-* 動的配列・スピル、レガシー配列数式 `{=...}`。
-* Excel / ODS のチャート、図形、スライサー。
-* Excel エラー種別の完全再現（`#VALUE!` と `ERR` の1対1など）。
-* デスクトップ Excel が自文書と食い違う既知の癖（例: 一部環境の `-2^2`）。HasuCalc は OpenFormula の文書上の優先順位に従う。
-* 未掲載の Excel 関数、および掲載関数の全引数・全ロケール・全日付システム。
-* グリッド TUI への多言語タイポグラフィ全面適用（PNG 経路が主。§5）。
+* VBA / macros, pivots, conditional formatting, merged cells, comments, data validation.
+* Dynamic arrays / spill, legacy array formulas `{=...}`.
+* Excel / ODS charts, shapes, slicers.
+* Full Excel error taxonomy (1:1 `#VALUE!` ↔ `ERR`, etc.).
+* Known desktop Excel quirks that contradict documented OpenFormula precedence (e.g. some `-2^2` environments). HasuCalc follows OpenFormula document precedence.
+* Unlisted Excel functions, and full arg / locale / date-system coverage of listed ones.
+* Full multilingual typography in the grid TUI (PNG path is primary; §5).
 
-監査や互換確認で「Excel と違う」が出ても、上表の Lotus / 固有 / 対象外に属する限り**修正しない**。コアの保証が壊れているときだけ直す。
+If an audit finds “different from Excel,” do **not** change behavior when it falls under Lotus / HasuCalc-specific / out-of-scope above. Fix only when a **core guarantee** breaks.
 
 ---
 
-## 2. システムアーキテクチャ & パッケージ構成
+## 2. Architecture & packages
 
 ```
 hasucalc/
-├── main.go               # アプリケーションエントリポイント、CLI引数パース
-├── version/              # セマンティックバージョン定数
-├── coord/                # 座標・セル番地・範囲参照（A1, A1:B10, A1..B10, Sheet1!A1）
-├── cell/                 # セルデータ型、値、表示フォーマット（通貨, %, 日付, 指数）
-├── formula/              # Lexer / Parser / AST / Evaluator / 組み込み関数
-├── sheet/                # シート・ワークブック、I/O（hwk/hwkz/xlsx/ods/csv/markdown）
-│   ├── sheet.go          # セル操作、CSV、AutoFill、転置、単一シートI/O
-│   ├── workbook.go       # 複数シート管理、再計算
+├── main.go               # Entry, CLI parsing
+├── version/              # Semantic version constant
+├── coord/                # Addresses & ranges (A1, A1:B10, A1..B10, Sheet1!A1)
+├── cell/                 # Types, values, display formats (currency, %, date, scientific)
+├── formula/              # Lexer / Parser / AST / Evaluator / builtins
+├── sheet/                # Sheets, workbook, I/O (hwk/hwkz/xlsx/ods/csv/markdown)
+│   ├── sheet.go
+│   ├── workbook.go
 │   ├── xlsx.go / export_xlsx.go / export_ods.go / export_markdown.go
 │   └── ods.go
-├── tui/                  # 端末UI（描画は app.go）、パレット、メニュー、グラフ、タイポグラフィ
-├── engine_test.go        # 統合・回帰テスト
-├── mega_test.go          # 大規模シナリオテスト
-└── SPECIFICATION.md      # 本仕様書
+├── tui/                  # Terminal UI, palette, menus, charts, typography
+├── engine_test.go        # Integration / regression tests
+├── mega_test.go          # Large scenario tests
+├── bugfix_regression_test.go
+├── SPECIFICATION.md      # This document (English, canonical)
+└── SPECIFICATION.ja.md   # Japanese translation
 ```
 
 ---
 
-## 3. 機能仕様詳細
+## 3. Feature specification
 
-### 3.1 セル・シート・ワークブック仕様
+### 3.1 Cells, sheets, workbooks
 
-* **シート規模**: 1,048,576行（`1`〜`1048576`）× 16,384列（`A`〜`XFD`）。
-* **セル型**:
-  * `NUMBER`（数値 / float64）
-  * `LABEL`（文字列: 左寄せ `'`, 右寄せ `"`, 中央揃え `^`）
-  * `FORMULA`（数式: `=...`, `@...`, `+...`）
-  * `EMPTY`（空セル）
-* **表示フォーマット**:
-  * 通貨: `(C2)` → `$1,234.56`、`(C2¥)` → `¥1,234.56`。記号はセル書式の前置文字列で、**種類の制限はない**（省略時は `$`）。負数は `(記号+金額)`。記号の後ろ付けや `1.234,56` 型の桁区切りはしない。
-  * パーセント: `(P1)` → `12.3%`
-  * 固定小数点: `(F2)` → `12.34`
-  * 桁区切り: `(,)` → `1,234,567`
-  * 指数表記: `(E2)` → `1.23E+04`（Lotus 別名 `(S2)` も受理）
-  * 日付: `(D1)`〜`(D5)` → `2026/08/27`, `27-Aug-06`, `27-Aug`, `08/27/06`, `August 27, 2006` 等
-* **マルチシート・ワークブック**:
-  * 1つのファイルに複数のワークシートを保持可能。
-  * シート間数式参照: `=Sheet2!A1*1.1` や `=SUM(Sales!B2:B10)` をサポート。
-  * シート追加・削除・改名は Undo/Redo でブック構造ごと復元可能。
-* **依存関係 & 再計算エンジン**:
-  * AUTO モードではセル変更時に **ブック全体** を複数パス再計算（クロスシート依存の収束）。
-  * 循環参照の自動検出（`CIRCULAR REF` エラーを表示）。存在しないシート参照は `#REF!`。
-  * 全列参照（`A:A`）や巨大範囲は、空行をフル走査せず **used range（実データ末尾）** までに制限する。
-  * 識別子 `TRUE` / `FALSE` は真偽値。関数 `TRUE()` / `FALSE()` も同値。数値文脈では 1.0 / 0.0 に変換される。`ISLOGICAL` は真偽値のみ真（数値の 0/1 は偽）。
-
----
-
-### 3.2 数式・計算エンジン仕様
-
-Excel 記法と Lotus 記法を**両方受け付ける**（前者は利便のための記法受理であり、Excel 互換製品であることではない）。優先順位・エラー表示・別名の帰属は [§1.4](#14-仕様の契約何が不具合で何が仕様差か) に従う。「Excel と完全一致」は契約しない。
-
-* **数式プレフィックス**: `=`（Excel標準）, `@`（関数記法）, `+`（クラシック数式記法）。
-* **範囲指定子**: コロン `:`（例: `A1:B10`、空白入り `A1 : B10`）およびピリオド2つ `..`（例: `A1..B10`）。
-* **べき乗と単項マイナス**: 単項マイナスは `^` より強い（OpenFormula / Excel の文書上の優先順位）。`-2^2` = `(-2)^2` = `4`。`-4` が欲しいときは `-(2^2)` と書く。
-* **対応関数（70種以上）**:
-  * **数学・統計**: `SUM`, `AVERAGE`, `COUNT`, `COUNTA`, `COUNTIF`, `SUMIF`, `MAX`, `MIN`, `ROUND`, `ROUNDUP`, `ROUNDDOWN`, `ABS`, `INT`, `MOD`, `SQRT`, `POWER`, `EXP`, `LN`, `LOG`, `LOG10`, `MEDIAN`, `STDEV`, `VAR`
-  * **三角関数**: `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, `PI`, `DEGREES`, `RADIANS`
-  * **論理・検索**: `IF`, `IFS`, `AND`, `OR`, `NOT`, `TRUE`, `FALSE`, `VLOOKUP`, `HLOOKUP`, `INDEX`, `MATCH`, `CHOOSE`, `ISNUMBER`, `ISTEXT`, `ISBLANK`, `ISERROR`, `IFERROR`
-  * **文字列**: `CONCAT`, `CONCATENATE`, `LEFT`, `RIGHT`, `MID`, `LEN`, `UPPER`, `LOWER`, `PROPER`, `TRIM`, `REPLACE`, `SUBSTITUTE`, `EXACT`, `FIND`, `SEARCH`, `TEXT`, `VALUE`, `REPT`
-  * **日付・時刻**: `TODAY`, `NOW`, `DATE`, `YEAR`, `MONTH`, `DAY`, `HOUR`, `MINUTE`, `SECOND`, `DAYS`, `DATEDIF`
-  * **財務**: `PMT`, `PV`, `FV`, `NPV`, `IRR`, `RATE`, `NPER`
+* **Size**: 1,048,576 rows (`1`–`1048576`) × 16,384 columns (`A`–`XFD`).
+* **Types**:
+  * `NUMBER` (float64)
+  * `LABEL` (string: left `'`, right `"`, center `^`)
+  * `FORMULA` (`=...`, `@...`, `+...`)
+  * `EMPTY`
+* **Display formats**:
+  * Currency: `(C2)` → `$1,234.56`, `(C2¥)` → `¥1,234.56`. Any prefix string; default `$`. Negatives as `(symbol+amount)`. No suffix currencies or `1.234,56` grouping.
+  * Percent: `(P1)` → `12.3%`
+  * Fixed: `(F2)` → `12.34`
+  * Thousands: `(,)` → `1,234,567`
+  * Scientific: `(E2)` → `1.23E+04` (Lotus alias `(S2)`)
+  * Date: `(D1)`–`(D5)` → e.g. `2026/08/27`, `27-Aug-06`, …
+* **Multi-sheet workbooks**:
+  * Multiple worksheets per file.
+  * Cross-sheet refs: `=Sheet2!A1*1.1`, `=SUM(Sales!B2:B10)`.
+  * Sheet add/delete/rename participate in Undo/Redo of workbook structure.
+* **Dependencies & recalc**:
+  * AUTO mode recalculates the **whole workbook** in multiple passes (cross-sheet convergence).
+  * Circular refs → `CIRCULAR REF`; missing sheets → `#REF!`.
+  * Whole-column refs (`A:A`) and huge ranges stop at the **used range**.
+  * `TRUE` / `FALSE` identifiers and `TRUE()` / `FALSE()` are booleans; numeric context → 1.0 / 0.0. `ISLOGICAL` is true only for booleans (not numeric 0/1).
 
 ---
 
-### 3.3 ユーザーインターフェース & キーバインド仕様
+### 3.2 Formula engine
 
-* **カーソル移動**: 矢印キー
-* **範囲選択**: `Shift + 矢印キー` または **マウスドラッグ**
-* **編集**:
-  * `F2` / `Ctrl + E`: インラインセル編集（数式バー）
-  * 文字キー直接入力: 新規入力開始
-  * `Del`: 選択セル/範囲の消去
-* **クリップボード**:
-  * `Ctrl + C`: コピー
-  * `Ctrl + X`: 切り取り（貼り付け時は数式参照を相対シフトしない）
-  * `Ctrl + V`: 貼り付け（コピー時は相対参照シフト、切り取り時は移動相当）
-  * `Ctrl + L`: リンク貼り付け（`='Sheet'!A1` を生成）
-* **履歴**:
-  * `Ctrl + Z`: 元に戻す（Undo）。セル内容に加え、シート追加・削除・改名のブック構造も対象
-  * `Ctrl + Y`: やり直し（Redo）
-* **検索・ジャンプ**:
-  * `Ctrl + F`: シート内検索
-  * `Ctrl + H`: 検索と置換
-  * `F3`: 次を検索
-  * `Shift + F3`: 前を検索
-  * `Ctrl + G` / `F5`: GOTO セル位置ジャンプ
-* **パレット・メニュー・その他**:
-  * `Ctrl + K` または `:`: コマンドパレット（ファジー検索）
-  * `/`: スラッシュメニュー起動
-  * `Alt + =`: AutoSum
-  * `F9`: 全シート再計算
-  * `F10`: 全画面グラフ表示
-  * `Ctrl + S`: 保存ダイアログ
-  * `Ctrl + O`: 開くダイアログ
-  * `Ctrl + T`: シート切り替えモーダル
-  * `Ctrl + PgDn`: 次のシート
-  * `Ctrl + PgUp`: 前のシート
-  * `Ctrl + Q`: 終了（未保存時は確認表示）
-  * `F1`: ヘルプ画面表示
+Both Excel-style and Lotus-style input are accepted (the former is convenience notation, not Excel-product status). Precedence, errors, and aliases follow [§1.4](#14-spec-contract-bugs-vs-intentional-differences). Exact Excel parity is not contracted.
+
+* **Prefixes**: `=` (common), `@` (function), `+` (classic).
+* **Ranges**: `:` (e.g. `A1:B10`, `A1 : B10`) and `..` (e.g. `A1..B10`).
+* **Power & unary minus**: Unary minus binds tighter than `^` (OpenFormula / Excel documented precedence). `-2^2` = `(-2)^2` = `4`. Write `-(2^2)` for `-4`.
+* **Functions (70+)**:
+  * **Math / stats**: `SUM`, `AVERAGE`, `COUNT`, `COUNTA`, `COUNTIF`, `SUMIF`, `MAX`, `MIN`, `ROUND`, `ROUNDUP`, `ROUNDDOWN`, `ABS`, `INT`, `MOD`, `SQRT`, `POWER`, `EXP`, `LN`, `LOG`, `LOG10`, `MEDIAN`, `STDEV`, `VAR`
+  * **Trig**: `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, `PI`, `DEGREES`, `RADIANS`
+  * **Logic / lookup**: `IF`, `IFS`, `AND`, `OR`, `NOT`, `TRUE`, `FALSE`, `VLOOKUP`, `HLOOKUP`, `INDEX`, `MATCH`, `CHOOSE`, `ISNUMBER`, `ISTEXT`, `ISBLANK`, `ISERROR`, `IFERROR`
+  * **Text**: `CONCAT`, `CONCATENATE`, `LEFT`, `RIGHT`, `MID`, `LEN`, `UPPER`, `LOWER`, `PROPER`, `TRIM`, `REPLACE`, `SUBSTITUTE`, `EXACT`, `FIND`, `SEARCH`, `TEXT`, `VALUE`, `REPT`
+  * **Date / time**: `TODAY`, `NOW`, `DATE`, `YEAR`, `MONTH`, `DAY`, `HOUR`, `MINUTE`, `SECOND`, `DAYS`, `DATEDIF`
+  * **Finance**: `PMT`, `PV`, `FV`, `NPV`, `IRR`, `RATE`, `NPER`
 
 ---
 
-### 3.4 ネイティブマウス操作仕様
+### 3.3 UI & keybindings
 
-* **通常クリック**: クリックしたセルへカーソル移動（範囲選択は自動解除）。
-* **ドラッグ選択 (Click & Drag)**:
-  - セルをクリックしたままドラッグして矩形範囲選択。
-  - マウスボタンを離しても選択範囲は保持され、コピーや操作が可能。
-  - 次の通常クリックで選択解除。ターミナルのネイティブ文字列選択とも競合しません。
-* **マウスホイール上下**: 3行単位のスムーズな上下グリッドスクロール。
-* **シートタブクリック**: 複数シート時に下部に表示されるシート見出しをクリックして直接シート切替。
-
----
-
-### 3.5 スラッシュメニュー体系 (/)
-
-Excel リボン語彙に寄せた階層。`Ctrl+K` パレットからも同機能にアクセスできます。
-
-* **`/F` (File)**:
-  * `/FN` : New（新規作成）
-  * `/FO` : Open（開くダイアログ）
-  * `/FS` : Save（保存ダイアログ）
-  * `/FX` : Export → 形式（`C` CSV / `E` Excel / `O` ODS / `M` Markdown）→ Scope（`S` Sheet / `R` Range）
-  * `/FQ` : Quit（終了）
-* **`/H` (Home)**:
-  * `/HU` `/HR` : Undo / Redo
-  * `/HX` `/HC` `/HV` : Cut / Copy / Paste
-  * `/HS` : Paste-Special（Values `/HSV`, Link `/HSL`, Transpose `/HST`）
-  * `/HK` : Clear（消去）
-  * `/HF` `/HN` `/HB` `/HE` `/HA` : Find / Next / Prev / Replace / Find-All
-  * `/HG` : Goto
-  * `/HM` : Number（Currency `/HMC`, Percent `/HMP`, Fixed `/HMF`, Comma `/HM,`, Date `/HMD`, Scientific `/HMS`, General `/HMG`）
-  * `/HL` : Align（Left `/HLL`, Right `/HLR`, Center `/HLC`）
-  * `/HW` : Cells（行・列挿入削除・列幅 `/HWI` `/HWD` `/HWC` `/HWK` `/HWW` `/HWE` `/HWG`）
-* **`/I` (Insert)**:
-  * `/IF` : Function（関数ブラウザ）
-  * `/IR` `/IC` : Rows / Columns（挿入）
-  * `/IT` `/IN` : Today / Now
-  * `/IH` : Chart（F10 表示）
-* **`/O` (Formulas)**:
-  * `/OS` : AutoSum（`Alt+=`）
-  * `/OF` : Insert-Function
-  * `/OA` `/OC` `/OM` `/OI` : Average / Count / Max / Min
-  * `/O9` : Recalculate（`F9`）
-* **`/D` (Data)**:
-  * `/DS` : Sort（Ascending `/DSA`, Descending `/DSD`, Horiz-Asc `/DSH`, Horiz-Desc `/DSZ`, Reset `/DSR`）
-  * `/DA` : AutoFill
-  * `/DF` : Fill（開始・増分・停止の対話指定）
-  * `/DT` : Transpose（範囲転置）
-  * `/DN` : Names（Create `/DNC`, Delete `/DND`, List `/DNL`）
-* **`/V` (View)**:
-  * `/VF` : Freeze-Panes（Both `/VFB`, Horizontal `/VFH`, Vertical `/VFV`, Clear `/VFC`）
-  * `/VS` `/VN` `/VP` : Select / Next / Prev sheet
-  * `/VA` `/VD` `/VR` : Add / Delete / Rename sheet
-* **`/C` (Chart)**:
-  * `/CV` : View（F10）
-  * `/CT` : Type（Line, Bar, Stacked, Pie）
-  * `/CI` : Title
-  * `/CX` : X-Axis
-  * `/CA`〜`/CF` : Series-A〜F
-  * `/CS` : Status
-  * `/CP` : Save-PNG
-* **`/?` (Help)**:
-  * `/?A` : About
-  * `/?K` : Keybindings（F1）
-  * `/?P` : Palette（Ctrl+K）
+* **Move**: arrows
+* **Select**: `Shift + arrows` or **mouse drag**
+* **Edit**:
+  * `F2` / `Ctrl + E`: inline edit (formula bar)
+  * Typing starts new input
+  * `Del`: clear cell/range
+* **Clipboard**:
+  * `Ctrl + C` copy
+  * `Ctrl + X` cut (no relative shift on paste)
+  * `Ctrl + V` paste (relative shift on copy; move-like on cut)
+  * `Ctrl + L` paste link (`='Sheet'!A1`)
+* **History**:
+  * `Ctrl + Z` undo (including sheet structure)
+  * `Ctrl + Y` redo
+* **Find / goto**:
+  * `Ctrl + F` find
+  * `Ctrl + H` replace
+  * `F3` / `Shift + F3` next / prev
+  * `Ctrl + G` / `F5` goto
+* **Palette / menus / other**:
+  * `Ctrl + K` or `:` command palette
+  * `/` slash menu
+  * `Alt + =` AutoSum
+  * `F9` recalc all sheets
+  * `F10` full-screen chart
+  * `Ctrl + S` / `Ctrl + O` save / open
+  * `Ctrl + T` sheet modal
+  * `Ctrl + PgDn` / `Ctrl + PgUp` next / prev sheet
+  * `Ctrl + Q` quit (confirm if dirty)
+  * `F1` help
 
 ---
 
-### 3.6 検索・置換・ジャンプ仕様
+### 3.4 Native mouse
 
-* **GOTO ジャンプ (`Ctrl+G` / `F5` / `/HG`)**:
-  - 単一セル（`B10`）、矩形範囲（`B2..D10`）、他シート（`Sheet2!A1`）、定義済み名前付き範囲（`Total`）へのジャンプに対応。
-  - ジャンプ先セルが画面外にある場合、ビューポートが自動スクロールして画面内に収まるよう調整。
-* **シート内検索 (`Ctrl+F` / `/HF`) & 次/前 (`F3` / `Shift+F3`)**:
-  - 生入力文字列（`RawInput`）、数式計算値（`Value`）、フォーマット表示文字列（`FormattedValue`）のすべてを対象にインクリメンタル検索。
-  - シート末尾に達した場合は先頭から循環ラップアラウンド。
-* **検索と置換 (`Ctrl+H` / `/HE`)**:
-  - 個別確認置換（`Y`: 置換して次へ, `N`: スキップ, `A`: 一括全置換, `Esc`: 中断）。
-  - 数式計算結果（例: `=B8+1` の結果としての `24`）を含むセルも漏れなく置換可能。
-* **ワークブック全体検索 (`/HA` Find-All)**:
-  - ブック内の全シートを横断検索し、該当セルが存在するシートへ自動切り替えしてフォーカス。
+* **Click**: move cursor; clears selection.
+* **Click & drag**: rectangular selection; kept after release until the next plain click. Does not fight terminal text selection.
+* **Wheel**: scroll grid by 3 rows.
+* **Sheet tabs**: click bottom tabs to switch sheets.
 
 ---
 
-### 3.7 ウィンドウ枠の固定仕様 (Freeze-Panes)
+### 3.5 Slash menus (/)
 
-* **コマンド**: `/VF`（View → Freeze-Panes）
-  - `/VFB` (Both): カーソル行より上・カーソル列より左を同時に固定。
-  - `/VFH` (Horizontal): カーソル行より上を行固定。
-  - `/VFV` (Vertical): カーソル列より左を列固定。
-  - `/VFC` (Clear): すべての固定枠を解除。
-* **描画保護**: 水平・垂直スクロール時も、固定された見出し行・見出し列が画面左端・上端に常時正しく描画されます。
+Ribbon-inspired hierarchy; also reachable from the `Ctrl+K` palette.
 
----
-
-### 3.8 連続データ作成 & 行列入替仕様 (AutoFill & Transpose)
-
-* **AutoFill（`/DA`）**:
-  - 選択範囲の先頭セル（および2番目のセル）から規則性を自動検出。
-  - 数値等差数列（10, 20 $\rightarrow$ 30, 40...）
-  - 日付連番（`YYYY/MM/DD`, `YYYY-MM-DD`, `YYYY.MM.DD` 等を自動認識して 1日単位等で展開）。
-* **Data Fill（`/DF`）**:
-  - 開始値、増分ステップ（`1d` [日], `1w` [週], `1m` [月], `1y` [年], 数値）、停止値を対話プロンプトで指定して展開。
-* **Paste-Transpose（`/HST` または コマンドパレット）**:
-  - `Ctrl+C` でコピーした矩形データを、現在位置に行列を入れ替えて貼り付け（数式相対参照も縦横反転追従）。
-* **Range Transpose（`/DT`）**:
-  - 元範囲と展開先セルを指定してマトリクス転置展開（インプレース転置時の残余データ自動クリア対応）。
+* **`/F` (File)**: `/FN` New, `/FO` Open, `/FS` Save, `/FX` Export (CSV/Excel/ODS/Markdown × Sheet/Range), `/FQ` Quit
+* **`/H` (Home)**: Undo/Redo, Cut/Copy/Paste, Paste-Special (Values/Link/Transpose), Clear, Find/Next/Prev/Replace/Find-All, Goto, Number formats, Align, Cells (insert/delete/width)
+* **`/I` (Insert)**: Function browser, Rows/Columns, Today/Now, Chart (`F10`)
+* **`/O` (Formulas)**: AutoSum, Insert-Function, Average/Count/Max/Min, Recalculate (`F9`)
+* **`/D` (Data)**: Sort, AutoFill, Fill, Transpose, Names
+* **`/V` (View)**: Freeze-Panes, Select/Next/Prev sheet, Add/Delete/Rename
+* **`/C` (Chart)**: View, Type, Title, axes/series, Status, Save-PNG
+* **`/?` (Help)**: About, Keybindings (`F1`), Palette
 
 ---
 
-### 3.9 グラフ描画 & 高品位PNG画像エクスポート仕様
+### 3.6 Find, replace, goto
 
-#### 1. グラフ種別
-* **LINE（折れ線グラフ）**: 複数系列の推移・マーカープロット。
-* **BAR（集合棒グラフ）**: 系列ごとの比較棒グラフ。
-* **STACKED（積層棒グラフ）**: 系列構成比と合計の可視化。
-* **PIE（円グラフ）**: 構成比率、扇形パーセント表示、凡例。
-
-#### 2. PNG画像エクスポートエンジン (`graph_png.go`)
-* **解像度**: プレゼンテーション・ドキュメントに最適な **1280×720 px (HD)**。
-* **TrueType / OpenType 日本語フォント自動レンダリング**:
-  - OSの日本語システムフォントを自動検出（macOS: ヒラギノ角ゴシック、Windows: Meiryo、Linux: Noto Sans CJK）。
-* **スマート命名規則**:
-  - `<ファイル名ベース>_<GRAPHTYPE>.png`（例: `sample_PIE.png`）を自動生成。
-* **F10 全画面プレビューからの即座保存**:
-  - `F10` でグラフ表示中、`S` キーを押すだけで即座に PNG 保存。
-
-#### 3. グラフ設定の永続化
-* 系列・種類・タイトルはシートの `GraphConfig` として **`.hwk` / `.hwkz` にのみ保存**する。
-* 画像としての持ち出しは **PNG エクスポート**に限る。
-* **Excel（`.xlsx`）および ODS（`.ods`）ではグラフの入出力を行わない。** HasuCalc のグラフ（端末描画・1シート1グラフ・系列 A〜F）は Excel / LibreOffice のチャートモデルと1対1で対応しない。中途半端な写しは「あるのに壊れている」ように見えるため、セル・数式・名前などの表データだけをやり取りし、チャート部品（`xl/charts` 等）は書き出さず、読み込み時も無視する。
+* **Goto (`Ctrl+G` / `F5` / `/HG`)**: cell (`B10`), range (`B2..D10`), other sheet (`Sheet2!A1`), named range (`Total`). Viewport scrolls if needed.
+* **Find (`Ctrl+F` / `/HF`) & next/prev**: searches `RawInput`, computed `Value`, and formatted display; wraps around.
+* **Replace (`Ctrl+H` / `/HE`)**: confirm `Y` / skip `N` / all `A` / cancel `Esc`; can replace cells whose *computed* value matches.
+* **Find-All (`/HA`)**: workbook-wide; switches to the sheet that contains the hit.
 
 ---
 
-### 3.10 ファイルフォーマット & I/O仕様
+### 3.7 Freeze panes
 
-#### 1. Compact Non-Compressed `.hwk`（デフォルト形式）
-非圧縮プレーンテキスト（JSON）でありながら冗長性を徹底排除したスリム構造。
+* **`/VF`**: Both `/VFB`, Horizontal `/VFH`, Vertical `/VFV`, Clear `/VFC`.
+* Frozen header rows/columns stay painted at the top/left while scrolling.
+
+---
+
+### 3.8 AutoFill & transpose
+
+* **AutoFill (`/DA`)**: detect pattern from first (and second) cells — numeric series, flexible date sequences.
+* **Data Fill (`/DF`)**: interactive start / step (`1d`/`1w`/`1m`/`1y`/number) / stop.
+* **Paste-Transpose (`/HST`)**: transpose clipboard with formula retargeting.
+* **Range Transpose (`/DT`)**: transpose into a destination (clears leftovers on in-place transpose).
+
+---
+
+### 3.9 Charts & PNG export
+
+#### Chart types
+* **LINE**, **BAR**, **STACKED**, **PIE** (with legend / percent labels as applicable).
+
+#### PNG engine (`graph_png.go`)
+* **1280×720 (HD)**.
+* Auto-detect system CJK fonts (e.g. Hiragino on macOS, Meiryo on Windows, Noto Sans CJK on Linux).
+* Naming: `<basename>_<GRAPHTYPE>.png` (e.g. `sample_PIE.png`).
+* From `F10` preview, press `S` to save PNG immediately.
+
+#### Persistence
+* Series / type / title live in sheet `GraphConfig` and are saved **only in `.hwk` / `.hwkz`**.
+* Portable images are **PNG only**.
+* **No chart I/O for `.xlsx` / `.ods`.** HasuCalc’s one-chart-per-sheet A–F model does not map 1:1 to Excel/LibreOffice charts; half-broken chart copy would look worse than none. Tabular data only; chart parts are ignored on read and omitted on write.
+
+---
+
+### 3.10 File formats & I/O
+
+#### 1. Compact uncompressed `.hwk` (default)
+Slim JSON without gzip:
 
 ```json
 {
@@ -388,79 +321,66 @@ Excel リボン語彙に寄せた階層。`Ctrl+K` パレットからも同機�
   ]
 }
 ```
-* 非圧縮のまま **80%以上のファイルサイズ削減** を達成。
-* `cat`, `grep`, `jq`, Python, LLMプロンプトへの直接流し込みが可能。
-* セル変更が1行単位の `git diff` として正確に記録。
+* Roughly **80%+ smaller** than a naïve dump while staying uncompressed.
+* Directly usable with `cat` / `grep` / `jq` / Python / LLM prompts.
+* Cell edits show up as clean one-line `git diff` hunks.
 
-#### 2. 透過的 GZIP 圧縮形式（`.hwkz` / `.hwk.gz`）
-* 拡張子指定で自動GZIP圧縮保存。
-* 読み込み時は Magic Byte（`0x1f, 0x8b`）を自動検出し、拡張子にかかわらず透過的ロード。
+#### 2. Transparent GZIP (`.hwkz` / `.hwk.gz`)
+* Save compressed by extension; load via magic bytes `0x1f 0x8b` regardless of suffix.
 
-#### 3. 外部フォーマットのエクスポート / インポート
+#### 3. External formats
 
-正本は `.hwk` / `.hwkz`。次の形式は**他ソフトとの表データ受け渡し用**であり、HasuCalc をそのソフトの代替にするものではない。
+Authoritative storage is `.hwk` / `.hwkz`. The following are **tabular interchange** only—not a claim that HasuCalc replaces those apps.
 
-* **Excel (`.xlsx`)**: 複数シートのセル・数式・名前などを入出力する。**グラフ（チャート）は対象外**（§3.9）。Excel 互換を謳うものではない。
-* **LibreOffice (`.ods`)**: 複数シートの表データを入出力する。**グラフは対象外**（§3.9）。
-* **CSV (`.csv`)**: **UTF-8 BOM（`0xEF, 0xBB, 0xBF`）を自動付与**し、他表計算ソフトで文字化けしにくくする。
-* **Markdown (`.md`)**: GitHub Flavored Markdown 表形式出力。
-
----
-
-### 3.11 ファイルピッカー & 保存ダイアログ仕様
-
-* **インライン編集**:
-  - カーソル位置の黄色反転ブロック表示とハードウェアカーソル同期。
-  - `←/→`, `Home/End`, `Delete/Backspace`, `Ctrl+U`, `Ctrl+K` による自由な部分編集。
-* **拡張子正規化**:
-  - 保存ファイル名に応じて適切な拡張子補完と上書き防止確認モーダル。
+* **Excel (`.xlsx`)**: multi-sheet cells/formulas/names, etc. **No charts** (§3.9). Not “Excel compatible.”
+* **LibreOffice (`.ods`)**: tabular multi-sheet I/O. **No charts** (§3.9).
+* **CSV (`.csv`)**: writes **UTF-8 BOM** (`0xEF, 0xBB, 0xBF`) to reduce mojibake in other apps.
+* **Markdown (`.md`)**: GitHub Flavored Markdown tables.
 
 ---
 
-### 3.12 多言語・多文字体系レンダリング仕様
+### 3.11 File picker & save dialog
 
-* **単独文字系**: 英語、日本語、中国語（簡/繁）、韓国語、キリル、ギリシャ語。
-* **RTL & 筆記体結合系**: アラビア語、ウルドゥー語、ペルシャ語、ヘブライ語（BiDi + 文脈合字シェイパー）。
-* **複雑結合・声調記号系**: ヒンディー語、ベンガル語、タイ語（書記素クラスタ・アンカー合成）。
-
----
-
-## 4. 開発作業経緯 (フェーズ別クロニクル)
-
-* **フェーズ 1: コアエンジン設計**: 疎行列セル構造、70種以上の関数 Lexer/Parser/Evaluator、DAG再計算エンジン。
-* **フェーズ 2: TUI & 基本操作統合**: tcell グリッド描画、範囲選択、Ctrl+C/X/V/Z/Y、Ctrl+K パレット、複数シート。
-* **フェーズ 3: ターミナルグラフ**: F10 全画面リアルタイム TUI グラフビューア（Line, Bar, Stacked, Pie）。
-* **フェーズ 4: 高品位PNG画像出力**: 1280x720 HD PNGエクスポート、TrueType/OpenType 日本語フォント自動描画。
-* **フェーズ 5: ブランド刷新**: HasuCalc 2.0 への統合、タイトル直下メニュー化。
-* **フェーズ 6: ファイルスリム化**: Compact JSON シリアライザ（80%削減）、透過的 GZIP 圧縮。
-* **フェーズ 7: 保存ダイアログ強化**: カーソル可視化、部分編集キーバインド。
-* **フェーズ 8: グローバルタイポグラフィ**: BiDi、アラビア筆記体、デーヴァナーガリー・タイ文字結合。
-* **フェーズ 9: シート間コピー＆ペースト**: ワークシートを跨ぐ数式シフト対応クリップボード。
-* **フェーズ 10: 検索・置換・GOTO・固定枠の強化**:
-  - GOTO セル位置ジャンプ（単一セル、範囲、シート間参照、名前付き範囲）。
-  - 計算値・表示値を含む検索・一括置換（Replace All）。
-  - ウィンドウ枠の固定（Freeze-Panes）の水平スクロール描画修正。
-* **フェーズ 11: 連続データ作成 & 行列入替の実装**:
-  - 柔軟な日付パーサー（`ParseFlexibleDate`）による YYYY/MM/DD や YYYY-MM-DD 連番対応。
-  - AutoFill（`/DA`）、Data Fill（`/DF`）、Paste-Transpose（`/HST`）、Range Transpose（`/DT`）。
-* **フェーズ 12: UI & メニューの最適化・スリム化**:
-  - Line 0 の重複日時表示を排除し、ステータスバーに統一。
-  - `Titles` を直感的な `Freeze-Panes`（当時 `/WF`、現行は `/VF`）に変更。
-  - `Edit` メニューを4グループに整理し、`Next` と `Previous` を隣接配置。
-  - 重複・冗長なメニュー項目（Line-Single/Double, Format Column-Width, 3段階Sort, Edit-Cell, Select-All, Recalculate, Fill-Down/Right）を削除して洗練。
+* Inline editing with yellow block + hardware cursor sync; `←/→`, `Home/End`, `Delete/Backspace`, `Ctrl+U`, `Ctrl+K`.
+* Extension normalization and overwrite confirmation.
 
 ---
 
-## 5. テスト & 品質保証
+### 3.12 Multilingual typography
 
-HasuCalc 2.0 は、`engine_test.go` / `mega_test.go` / `bugfix_v*_regression_test.go` で回帰を固定する。テストが守るのは [§1.4](#14-仕様の契約何が不具合で何が仕様差か) の契約であり、Excel 全機能の網羅ではない。
+* Simple scripts: Latin, Japanese, Chinese (SC/TC), Korean, Cyrillic, Greek.
+* RTL / cursive joining: Arabic, Urdu, Persian, Hebrew (BiDi + contextual shaping).
+* Complex clusters: Hindi, Bengali, Thai.
 
-1. **数式 & 関数評価**: 主要関数・エラー系・シート間参照。
-2. **再計算 & 循環参照**: 依存順の stale 回避、`CIRCULAR REF` 検知、全列参照の used-range 制限。
-3. **ファイルI/O**: Compact `.hwk`, GZIP `.hwkz`, Excel `.xlsx`, ODS, CSV（UTF-8 BOM）。
-4. **PNG画像エクスポート**: 出力生成とシグネチャ確認。
-5. **UI**: ファイルピッカー編集、マウスドラッグ選択、ホイール。
-6. **検索・置換・ジャンプ**: GOTO（シート同期含む）、計算値を含む検索／置換、全シート検索。
-7. **Freeze / AutoFill / Transpose / Undo**: 枠固定の永続化、行挿入の参照追従、マルチシート Undo 分離。
+---
 
-※ 多言語タイポグラフィ（BiDi・合字）は主に PNG エクスポート経路で適用。TUI グリッドへの全面適用は将来拡張。
+## 4. Development chronicle
+
+* **Phase 1**: Sparse cells, 70+ function lexer/parser/evaluator, DAG recalc.
+* **Phase 2**: tcell grid, selection, Ctrl+C/X/V/Z/Y, Ctrl+K palette, multi-sheet.
+* **Phase 3**: F10 terminal charts (Line, Bar, Stacked, Pie).
+* **Phase 4**: 1280×720 PNG export with system fonts.
+* **Phase 5**: HasuCalc 2.0 branding / menu under title.
+* **Phase 6**: Compact JSON serializer (~80% smaller) + transparent gzip.
+* **Phase 7**: Stronger save dialog editing.
+* **Phase 8**: Global typography (BiDi, Arabic joining, Devanagari/Thai clusters).
+* **Phase 9**: Cross-sheet copy/paste with formula shift.
+* **Phase 10**: Goto / find-replace / freeze-pane scroll fixes.
+* **Phase 11**: AutoFill, Data Fill, Paste-Transpose, Range Transpose.
+* **Phase 12**: Menu slimming and Freeze-Panes naming (`/VF`).
+
+---
+
+## 5. Testing & QA
+
+HasuCalc 2.0 pins regressions in `engine_test.go`, `mega_test.go`, and `bugfix_regression_test.go`. Tests enforce the [§1.4](#14-spec-contract-bugs-vs-intentional-differences) contract—not full Excel coverage.
+
+1. Formula & function evaluation (errors, cross-sheet).
+2. Recalc & circular refs; used-range limits for whole-column refs.
+3. File I/O: compact `.hwk`, gzip `.hwkz`, `.xlsx`, ODS, CSV (UTF-8 BOM).
+4. PNG export generation / signature checks.
+5. UI: file picker editing, mouse drag, wheel.
+6. Find / replace / goto (including sheet sync and computed values).
+7. Freeze / AutoFill / Transpose / multi-sheet Undo isolation.
+
+Multilingual typography (BiDi / ligatures) is applied mainly on the PNG path; full grid-TUI coverage is future work.
