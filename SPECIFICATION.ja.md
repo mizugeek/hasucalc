@@ -1,6 +1,7 @@
 # HasuCalc 2.0 詳細仕様書 & 開発作業経緯書
 
 > **正本（English）:** [SPECIFICATION.md](SPECIFICATION.md) · 概要: [README.md](README.md)  
+> **ユーザーマニュアル:** [USER_MANUAL.md](USER_MANUAL.md)（[日本語](USER_MANUAL.ja.md)）  
 > このファイルは日本語訳です。内容に差分がある場合は英語版を優先してください。
 
 本書は、モダンターミナル表計算ソフトウェア **「HasuCalc 2.0」** の最新アーキテクチャ、機能仕様、ユーザーインターフェース、メニュー体系、および開発経緯を包括的にまとめた公式ドキュメントです。
@@ -146,7 +147,9 @@ hasucalc/
 ├── engine_test.go        # 統合・回帰テスト
 ├── mega_test.go          # 大規模シナリオテスト
 ├── SPECIFICATION.md      # Specification (English, canonical)
-└── SPECIFICATION.ja.md   # 本仕様書（日本語）
+├── SPECIFICATION.ja.md   # 本仕様書（日本語）
+├── USER_MANUAL.md        # ユーザーマニュアル（英語・正本）
+└── USER_MANUAL.ja.md     # ユーザーマニュアル（日本語）
 ```
 
 ---

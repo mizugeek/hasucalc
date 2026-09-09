@@ -1,97 +1,64 @@
-# HasuCalc（モダン・ターミナル表計算）
+# HasuCalc
 
-> **正本（English）:** [README.md](README.md) · 仕様: [SPECIFICATION.md](SPECIFICATION.md)  
-> このファイルは日本語訳です。内容に差分がある場合は英語版を優先してください。
+> **正本（English）:** [README.md](README.md)  
+> **ユーザーマニュアル（詳細）:** [USER_MANUAL.md](USER_MANUAL.md)（[日本語](USER_MANUAL.ja.md)）  
+> 技術仕様: [SPECIFICATION.md](SPECIFICATION.md)（[日本語](SPECIFICATION.ja.md)）
 
-DOS / PC-98時代のクラシックなターミナル表計算ソフトのレトロな美しさ・配色・グラフ描画を再現しつつ、**現代的な快適操作（Shift+矢印選択、Ctrl+C/V/S、Ctrl+Kコマンドパレット、`=SUM(A1:B10)` 記法）** を融合した高速ターミナル表計算ソフトです。
+DOS / PC-98 風の見た目に、現代的な編集操作（`Shift`+矢印、`Ctrl+C/V/S`、`Ctrl+K`、`=SUM(A1:B10)`）を足したターミナル表計算です。
 
-**Excel 互換アプリではありません。** 正本はネイティブ形式（`.hwk` / `.hwkz`）です。`.xlsx` / `.ods` の入出力は、他ソフトと表データをやり取りするための利便機能にすぎません。
+**Excel 互換アプリではありません。** 正本は `.hwk` / `.hwkz`。`.xlsx` / `.ods` / `.csv` / `.md` / `.html` はデータ受け渡し用の橋渡しです。
 
-Go言語で実装されており、CGO不要の**単一実行可能バイナリ (`hasucalc`)** として動作します。
+CGO 不要の単一バイナリ: `hasucalc`。
 
----
-
-## 🚀 起動方法
+## クイックスタート
 
 ```bash
-cd ~/hasucalc
-
-# 起動（新規空白シートで起動）
-./hasucalc
-
-# デモデータ＆グラフ設定済みで起動
-./hasucalc --demo
-# または
-./hasucalc -d
-
-# ファイルを指定して起動
+./hasucalc              # 空白シート
+./hasucalc --demo       # デモ＋グラフ
 ./hasucalc my_sheet.hwk
-./hasucalc data.csv
+./hasucalc notes.md     # 表→グリッド、本文→ラベル
 ```
 
----
+画面構成、`[READY]` / `[CALC]` の意味、関数の引数、メニュー、ファイル形式の詳細は **[ユーザーマニュアル](USER_MANUAL.ja.md)** を参照してください。
 
-## ✨ モダン機能 & 操作一覧
+## キーバインド（要約）
 
-### 1. 直感的なキーボード操作 & 範囲選択
+| キー | 動作 |
+|:---|:---|
+| 矢印 / Shift+矢印 | 移動 / 選択 |
+| F2 / Ctrl+E | セル編集 |
+| Ctrl+C / X / V / L | コピー / 切り取り / 貼り付け / リンク貼付 |
+| Ctrl+Z / Y | Undo / Redo |
+| Ctrl+S / O | 保存 / 開く |
+| Ctrl+K または `:` | コマンドパレット |
+| Ctrl+F / H | 検索 / 置換 |
+| F3 / Shift+F3 | 次／前を検索 |
+| F5 / Ctrl+G | ジャンプ |
+| F9 | 再計算 |
+| F10 | グラフ（`S` = PNG） |
+| Alt+= | AutoSum |
+| `/` | スラッシュメニュー |
+| F1 | アプリ内ヘルプ |
+| Ctrl+Q | 終了 |
 
-| キー | 機能 | 説明 |
-|:---|:---|:---|
-| **`Ctrl + Z`** | **Undo (元に戻す)** | セル編集・貼り付けに加え、シート追加/削除/改名も取り消す |
-| **`Ctrl + Y`** | **Redo (やり直し)** | Undoで取り消した操作をやり直す |
-| **`Shift + 矢印キー`** | **ビジュアル範囲選択** | 矩形範囲を青色ハイライトで選択 |
-| **`Ctrl + C`** | **コピー** | 選択範囲またはカレントセルをクリップボードにコピー |
-| **`Ctrl + V`** | **貼り付け** | クリップボードから貼り付け（コピー時は相対数式をシフト、切り取り時は参照を維持） |
-| **`Ctrl + L`** | **リンク貼り付け** | `=A1` / `=Sheet!A1` 形式の参照を貼り付け |
-| **`Ctrl + X`** | **切り取り** | 選択範囲を切り取り（貼り付け時は数式の相対シフトなし） |
-| **`Ctrl + K` (または `:`)** | **コマンドパレット** | VS Code風のファジー検索ウィンドウを開く |
-| **`Ctrl + S`** | **保存 (Save)** | ディレクトリブラウザ＆ファイル保存ダイアログを開く |
-| **`Ctrl + O`** | **開く (Open)** | ディレクトリブラウザ＆ファイル選択ダイアログを開く |
-| **`Ctrl + F`** | **検索** | シート内（またはブック横断）検索 |
-| **`Ctrl + H`** | **置換** | 検索と置換 |
-| **`F3` / `Shift+F3`** | **次/前を検索** | 直前の検索語で移動 |
-| **`Ctrl + G` (または `F5`)** | **GOTO** | 指定セル番地（`B20`, `XFD1048576`等）へジャンプ |
-| **`Ctrl + A`** | **全選択** | データ領域全体を選択 |
-| **`Ctrl + T`** | **シート切替** | シート一覧モーダルを開く |
-| **`Ctrl + PgUp` / `Ctrl + PgDn`** | **シート移動** | 前後のシートへ切替 |
-| **`Alt + =`** | **AutoSum** | 選択範囲の外側に `=SUM()` を自動挿入 |
-| **`Delete` / `Backspace`** | **クリア** | 選択範囲またはカレントセルを消去 |
-| **`Esc`** | **キャンセル** | 選択解除 / メニュー・ポップアップを閉じる |
-| **`F1`** | **ヘルプ** | 操作説明・キー一覧・関数一覧の表示 |
-| **`F2` / `Ctrl + E`** | **セル編集 (Edit)** | 上から2行目の数式バーで選択中セルの内容を直接編集 |
-| **`F9`** | **再計算** | ブック内の全シートを再計算 |
-| **`F10`** | **グラフ表示** | 全画面ターミナルグラフ（折れ線・棒・円グラフ）を描画 / SキーでPNG保存 |
-| **`Ctrl + Q`** | **終了 (Quit)** | アプリケーション終了（未保存の変更がある場合は保存確認ダイアログを表示） |
-| **`/` (スラッシュ)** | **トップメニュー** | 1文字キー（例: `/FS` でSave、`/FO` でOpen、`/HU` でUndo、`/VF` で枠固定）または矢印で選択 |
+一覧とモード説明: [USER_MANUAL.ja.md §5](USER_MANUAL.ja.md#5-キーバインド)。
 
----
+## 関数名一覧
 
-### 2. コマンドパレット (`Ctrl + K` / `:`)
+`=NAME(...)` または `@NAME(...)`。引数の詳細は [関数リファレンス](USER_MANUAL.ja.md#9-関数リファレンス) を参照。
 
-`Ctrl + K` を押すと画面中央に検索ウィンドウが開き、インクリメンタル検索でコマンドを実行できます：
-- `sum` → `AutoSum (=SUM)`
-- `average` → `Average (=AVERAGE)`
-- `currency` → `通貨フォーマット`（前置記号は任意文字列・セルごとに指定可。未指定は `$`）
-- `percent` → `パーセントフォーマット (12.3%)`
-- `graph` → `グラフ表示 (F10)`
-- `sort asc` → `昇順ソート`
-- `csv export` → `CSVエクスポート`
+**Math/Agg:** `SUM`, `SUMIF`, `SUMIFS`, `SUMPRODUCT`, `PRODUCT`, `SUBTOTAL`, `ROUND`, `ROUNDUP`, `ROUNDDOWN`, `TRUNC`, `INT`, `ABS`, `MOD`, `QUOTIENT`, `SIGN`, `POWER`, `SQRT`, `EXP`, `LN`, `LOG`, `LOG10`, `CEILING`, `FLOOR`, `MROUND`, `FACT`, `GCD`, `LCM`, `COMBIN`, `PERMUT`, `PI`, `DEGREES`, `RADIANS`, `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, `ATAN2`, `RAND`, `RANDBETWEEN`
 
----
+**Statistical:** `AVG`, `AVERAGEIF`, `AVERAGEIFS`, `COUNT`, `COUNTA`, `COUNTBLANK`, `COUNTIF`, `COUNTIFS`, `MIN`, `MINIFS`, `MAX`, `MAXIFS`, `MEDIAN`, `MODE`, `LARGE`, `SMALL`, `PERCENTILE`, `QUARTILE`, `STDEV`, `STDEVP`, `VAR`, `VARP`, `RANK`
 
-### 3. 数式 & 範囲記法
+**Lookup/Ref:** `XLOOKUP`, `VLOOKUP`, `HLOOKUP`, `LOOKUP`, `INDEX`, `MATCH`, `XMATCH`, `OFFSET`, `CHOOSE`, `ROW`, `COLUMN`, `ROWS`, `COLUMNS`, `TRANSPOSE`
 
-- **現代的な数式記法**（Excel で馴染みのある書き方も受理）:
-  - `=SUM(A1:B10)`, `=AVERAGE(A1:A10)`, `=A1+B1*2`, `=IF(A1>50, "OK", "NG")`
-  - 識別子 `TRUE` / `FALSE` は真偽値（数値文脈では 1 / 0）。`ISLOGICAL` は真偽値のみ真
-- **クラシック記法対応**:
-  - `+A1+B1`, `@SUM(A1..B10)`, `@VLOOKUP(A1, B1..D10, 2)`
-- **セル範囲**: コロン `:` と ピリオド2つ `..` の両方をサポート（空白入り `A1 : B10` も可）
-- **クロスシート**: `=Sheet2!A1` など。編集時はブック全体を自動再計算
-- **シート規模**: 最大 **1,048,576行 × 16,384列 (`A`〜`XFD`)**（空行はメモリを食わない疎行列）
+**Logic/Error:** `IF`, `IFS`, `SWITCH`, `AND`, `OR`, `NOT`, `XOR`, `IFERROR`, `IFNA`, `ISNUMBER`, `ISSTRING`, `ISTEXT`, `ISNONTEXT`, `ISBLANK`, `ISLOGICAL`, `ISERR`, `ISNA`, `ISEVEN`, `ISODD`, `TRUE`, `FALSE`, `N`, `T`, `TYPE`
 
----
+**Text:** `TEXT`, `TRIM`, `CLEAN`, `SUBSTITUTE`, `REPLACE`, `REPT`, `UPPER`, `LOWER`, `PROPER`, `EXACT`, `CHAR`, `CODE`, `UNICHAR`, `UNICODE`, `CONCATENATE`, `CONCAT`, `TEXTJOIN`, `LEFT`, `RIGHT`, `MID`, `LEN`, `FIND`, `SEARCH`, `STRING`, `VALUE`, `NUMBERVALUE`, `TEXTBEFORE`, `TEXTAFTER`, `TEXTSPLIT`
 
-## 📖 詳細ドキュメント
+**Date/Time:** `TODAY`, `NOW`, `DATE`, `DATEVALUE`, `TIME`, `TIMEVALUE`, `DATEDIF`, `DAYS`, `DAYS360`, `NETWORKDAYS`, `WORKDAY`, `YEARFRAC`, `YEAR`, `MONTH`, `DAY`, `HOUR`, `MINUTE`, `SECOND`, `WEEKDAY`, `WEEKNUM`, `EDATE`, `EOMONTH`
 
-システムの全体アーキテクチャ、70種以上の関数仕様、非圧縮 Compact `.hwk` フォーマット、PNG画像エクスポート、および全開発作業経緯については、英語正本の [SPECIFICATION.md](SPECIFICATION.md)（日本語訳: [SPECIFICATION.ja.md](SPECIFICATION.ja.md)）をご参照ください。
+**Financial:** `PMT`, `PV`, `FV`, `NPV`, `IRR`, `RATE`, `NPER`, `SLN`, `SYD`, `DDB`
+
+`AVG`→`AVERAGE` などの別名はマニュアル参照。

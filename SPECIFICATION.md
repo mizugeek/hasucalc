@@ -1,7 +1,7 @@
 # HasuCalc 2.0 — Specification & Development History
 
 > **Languages:** English (canonical) · [日本語](SPECIFICATION.ja.md)  
-> Overview: [README.md](README.md) ([日本語](README.ja.md))  
+> Overview: [README.md](README.md) ([日本語](README.ja.md)) · **User manual:** [USER_MANUAL.md](USER_MANUAL.md) ([日本語](USER_MANUAL.ja.md))  
 > If translations disagree, this English document wins.
 
 Official documentation for the modern terminal spreadsheet **HasuCalc 2.0**: architecture, features, UI, menus, and development chronicle.
@@ -144,7 +144,9 @@ hasucalc/
 ├── mega_test.go          # Large scenario tests
 ├── bugfix_regression_test.go
 ├── SPECIFICATION.md      # This document (English, canonical)
-└── SPECIFICATION.ja.md   # Japanese translation
+├── SPECIFICATION.ja.md   # Japanese translation
+├── USER_MANUAL.md        # End-user manual (UI, modes, function parameters)
+└── USER_MANUAL.ja.md     # Japanese user manual
 ```
 
 ---
