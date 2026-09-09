@@ -1,0 +1,39 @@
+# Binaries
+/hasucalc
+/hasucalc.exe
+*.exe
+*.test
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+
+# Local workbook / office samples (never publish)
+*.hwk
+*.hwkz
+*.hwk.gz
+*.wk3
+*.xlsx
+*.xlsm
+*.xls
+*.ods
+*.ots
+*.csv
+
+# Generated images / exports
+*.png
+*.jpg
+*.jpeg
+*.gif
+/table*.md
+/mega_all_*
+/test_dat5.hwk
+
+# Scratch dumps at repo root
+/sheet.123.json
+/sheet.csv
+
+# Optional local fixtures for manual I/O tests (developers only)
+/testdata/local/
