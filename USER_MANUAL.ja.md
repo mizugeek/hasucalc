@@ -1,7 +1,7 @@
 # HasuCalc ユーザーマニュアル
 
 > **正本（English）:** [USER_MANUAL.md](USER_MANUAL.md)  
-> 概要: [README.md](README.md)（[日本語](README.ja.md)） · 技術仕様: [SPECIFICATION.md](SPECIFICATION.md)（[日本語](SPECIFICATION.ja.md)）  
+> 概要: [README.md](README.md)（[日本語](README.ja.md)） · 技術仕様: [SPECIFICATION.md](SPECIFICATION.md)（[日本語](SPECIFICATION.ja.md)） · ヘッドレス&MCP仕様: [HEADLESS_SPEC.md](HEADLESS_SPEC.md)（[日本語](HEADLESS_SPEC.ja.md)）  
 > 差分がある場合は英語版ユーザーマニュアルを優先してください。
 
 画面の見方、`[READY]` などの操作モード、キーバインド、対応ファイル形式、および組み込み関数の構文と引数を分かりやすく解説します。標準の保存形式は `.hwk` / `.hwkz` で、`.xlsx` / `.ods` / `.csv` / `.md` / `.html` とのデータ連携にも対応しています。
@@ -20,6 +20,7 @@
 8. [グラフ](#8-グラフ)
 9. [関数リファレンス](#9-関数リファレンス)
 10. [エラーとよくあるメッセージ](#10-エラーとよくあるメッセージ)
+11. [ヘッドレスCLIとMCPサーバー](#11-ヘッドレスcliとmcpサーバー)
 
 ---
 
@@ -411,3 +412,98 @@ CLI（`hasucalc file.md`）または **Ctrl+O**（`.md` / `.html` も一覧に�
 | “Imported markup from …” | `.md` / `.html` の取り込み成功。 |
 
 仕様方針と動作保証範囲の詳細は [SPECIFICATION.md](SPECIFICATION.md) §1.4（[日本語](SPECIFICATION.ja.md)）を参照。
+
+---
+
+## 11. ヘッドレスCLIとMCPサーバー
+
+HasuCalc は画面（TUI）を起動することなく、シェルスクリプト、データ処理パイプライン、自動化バッチ処理、および AI エージェント（Model Context Protocol / MCP）から高速に利用できるコマンドラインツールおよび stdio サーバーを備えています。
+
+### 11.1 サブコマンドリファレンス
+
+各サブコマンドの利用可能なオプションやフラグは、`hasucalc --help` または `hasucalc <subcommand> --help` で確認できます。
+
+#### `convert` — ファイル形式の相互変換
+`.hwk`, `.hwkz`, `.xlsx`, `.ods`, `.csv`, `.tsv`, `.md`, `.html` 間のフォーマット変換を行います。
+```bash
+hasucalc convert input.xlsx output.hwk
+hasucalc convert report.hwk output.csv --sheet "Q1 Sales"
+hasucalc convert input.hwk - --format markdown  # stdout へのストリーム出力
+```
+
+#### `info` — ワークブック・シートのメタデータ検査
+シート一覧、使用セル範囲（`usedRange`）、セル数、枠固定、グラフ設定等の構造情報を取得します。
+```bash
+hasucalc info data.hwk
+hasucalc info data.hwk --json  # エージェント・スクリプト向けJSON出力
+```
+
+#### `get` — セル・範囲データの抽出
+指定シート・範囲のデータを、スパースJSON、Markdown表、CSV、または生値（values）で抽出します。
+```bash
+hasucalc get sales.hwk -r A1:D10 --format markdown
+hasucalc get sales.hwk -r B2:B10 --format csv
+hasucalc get sales.hwk -r B2:B10 --format values
+hasucalc get sales.hwk --json  # 空セルを省略したスパースJSON形式
+```
+
+#### `eval` — 数式の即時計算
+コマンドラインから数式を直接評価します。スタンドアロンの電卓としても、既存のワークブックを参照した計算としても利用できます。
+```bash
+# スタンドアロン計算
+hasucalc eval "=SUM(10, 20, 30) * 1.1"
+
+# ワークブックのセルを参照した計算
+hasucalc eval -f sales.hwk "=XLOOKUP(23, A2:A25, B2:B25)"
+
+# 計算値のみを取得（シェルスクリプト変数代入用）
+RATE=$(hasucalc eval -f sales.hwk "=B2/B10" --format raw)
+```
+
+#### `set` — セル・範囲の更新
+単一セルまたは矩形範囲に値、文字列、数式、表示書式を設定します。自動的にワークブックを再計算し、原子的（atomic）にファイルを上書き保存します。
+```bash
+hasucalc set sales.hwk B2 150
+hasucalc set sales.hwk D4 "=SUM(D2:D3)" --fmt "(C2)"
+hasucalc set sales.hwk B2:B10 0 --dry-run  # 保存せずに変更結果をプレビュー
+```
+
+#### `batch` — トランザクション一括アクション実行
+JSONファイルまたは標準入力から、複数の編集アクション（`set_cell`, `set_range`, `clear`, `format`, `insert_row`, `delete_row`, `insert_col`, `delete_col`, `add_sheet`, `rename_sheet`, `delete_sheet`, `recalculate`）を順番に実行します。**途中でエラーが発生した場合はファイルを一切変更せず原状維持（完全ロールバック）します。**
+```bash
+cat actions.json | hasucalc batch sales.hwk
+hasucalc batch sales.hwk -i actions.json --dry-run
+```
+
+#### `chart` — ヘッドレス HD PNG グラフ生成
+画面を開かずに 1280×720 の高解像度 PNG グラフ画像を生成します。
+```bash
+hasucalc chart sales.hwk -o chart.png --type BAR --range-x A2:A10 --series-a B2:B10 --title "Q1 Performance"
+```
+
+### 11.2 Model Context Protocol (MCP) サーバー
+
+HasuCalc は外部ライブラリに依存しないネイティブな MCP stdio サーバー（JSON-RPC 2.0 準拠）を内蔵しています。AI コーディングアシスタントや自律型エージェントに対し、以下の 7 つのツールを提供します：
+
+1. `read_sheet`: セル・表データの取得（JSON / Markdown / CSV）
+2. `get_info`: ワークブック・シート構造のメタデータ検査
+3. `evaluate_formula`: 数式の即時評価（スタンドアロン / ワークブック参照）
+4. `edit_cell`: 単一セル・範囲の原子的更新
+5. `batch_edit`: 複数アクションの一括実行（ロールバック保証付き）
+6. `render_chart`: ヘッドレス HD PNG グラフ画像の生成
+7. `convert_file`: 8形式の相互変換
+
+#### クライアント設定（Claude Desktop 等）
+`claude_desktop_config.json` 等に以下を追加します：
+```json
+{
+  "mcpServers": {
+    "hasucalc": {
+      "command": "/path/to/hasucalc",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+詳細なプロトコル規約、JSONスキーマ、エラー契約については、完全仕様書 **[HEADLESS_SPEC.ja.md](HEADLESS_SPEC.ja.md)**（英語正本: [HEADLESS_SPEC.md](HEADLESS_SPEC.md)）を参照してください。

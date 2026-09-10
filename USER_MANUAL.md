@@ -1,7 +1,7 @@
 # HasuCalc User Manual
 
 > **Languages:** English (canonical) · [日本語](USER_MANUAL.ja.md)  
-> Overview / quick start: [README.md](README.md) · Engineering spec: [SPECIFICATION.md](SPECIFICATION.md)
+> Overview / quick start: [README.md](README.md) · Engineering spec: [SPECIFICATION.md](SPECIFICATION.md) · Headless & MCP: [HEADLESS_SPEC.md](HEADLESS_SPEC.md)
 
 This manual explains the on-screen UI, status indicators such as `[READY]`, editing modes, supported file formats, and the syntax and parameters of every built-in function. HasuCalc uses `.hwk` / `.hwkz` as its authoritative native formats, while offering import/export bridges for `.xlsx` / `.ods` / `.csv` / `.md` / `.html`.
 
@@ -19,6 +19,7 @@ This manual explains the on-screen UI, status indicators such as `[READY]`, edit
 8. [Charts](#8-charts)
 9. [Function reference](#9-function-reference)
 10. [Errors and common messages](#10-errors-and-common-messages)
+11. [Headless CLI and MCP Server](#11-headless-cli-and-mcp-server)
 
 ---
 
@@ -410,3 +411,98 @@ Functions accept either `@NAME(...)` or `NAME(...)` after `=`.
 | Status “Imported markup from …” | `.md` / `.html` opened successfully. |
 
 For engineering specifications and core behavioral guarantees, see [SPECIFICATION.md](SPECIFICATION.md) §1.4.
+
+---
+
+## 11. Headless CLI and MCP Server
+
+HasuCalc can be used without launching the terminal UI (TUI) as a high-performance command-line utility for shell scripting, data pipelines, automated batch jobs, and AI agents via Model Context Protocol (MCP).
+
+### 11.1 Subcommands Reference
+
+Run `hasucalc --help` or `hasucalc <subcommand> --help` to view built-in options and flags.
+
+#### `convert` — Format Conversion
+Converts spreadsheet files between `.hwk`, `.hwkz`, `.xlsx`, `.ods`, `.csv`, `.tsv`, `.md`, and `.html`.
+```bash
+hasucalc convert input.xlsx output.hwk
+hasucalc convert report.hwk output.csv --sheet "Q1 Sales"
+hasucalc convert input.hwk - --format markdown  # stream to stdout
+```
+
+#### `info` — Workbook & Sheet Metadata
+Inspects sheet names, used ranges, cell counts, freeze panes, and chart settings.
+```bash
+hasucalc info data.hwk
+hasucalc info data.hwk --json  # Machine-readable JSON output
+```
+
+#### `get` — Data & Cell Extraction
+Extracts cell data as sparse JSON, formatted Markdown, CSV, or raw values.
+```bash
+hasucalc get sales.hwk -r A1:D10 --format markdown
+hasucalc get sales.hwk -r B2:B10 --format csv
+hasucalc get sales.hwk -r B2:B10 --format values
+hasucalc get sales.hwk --json  # Sparse JSON omitting empty cells
+```
+
+#### `eval` — Instant Formula Evaluation
+Calculates formulas instantly from the command line, either as a standalone calculator or referencing cells in an existing workbook.
+```bash
+# Standalone calculation
+hasucalc eval "=SUM(10, 20, 30) * 1.1"
+
+# Contextual evaluation referencing a workbook
+hasucalc eval -f sales.hwk "=XLOOKUP(23, A2:A25, B2:B25)"
+
+# Raw output (value only, suitable for shell piping)
+RATE=$(hasucalc eval -f sales.hwk "=B2/B10" --format raw)
+```
+
+#### `set` — Cell & Range Mutation
+Updates single cells or rectangular ranges with values, strings, formulas, and format descriptors. Automatically recalculates the workbook and performs an atomic overwrite save.
+```bash
+hasucalc set sales.hwk B2 150
+hasucalc set sales.hwk D4 "=SUM(D2:D3)" --fmt "(C2)"
+hasucalc set sales.hwk B2:B10 0 --dry-run  # preview without saving
+```
+
+#### `batch` — Transactional Multi-Action Execution
+Executes an atomic list of actions (`set_cell`, `set_range`, `clear`, `format`, `insert_row`, `delete_row`, `insert_col`, `delete_col`, `add_sheet`, `rename_sheet`, `delete_sheet`, `recalculate`) from a JSON file or standard input. **Guarantees complete rollback if any action fails.**
+```bash
+cat actions.json | hasucalc batch sales.hwk
+hasucalc batch sales.hwk -i actions.json --dry-run
+```
+
+#### `chart` — Headless HD PNG Rendering
+Renders a 1280×720 HD PNG chart without opening an interactive window.
+```bash
+hasucalc chart sales.hwk -o chart.png --type BAR --range-x A2:A10 --series-a B2:B10 --title "Q1 Performance"
+```
+
+### 11.2 Model Context Protocol (MCP) Server
+
+HasuCalc includes a native, zero-dependency MCP stdio server complying with the JSON-RPC 2.0 specification. It provides 7 tools directly to AI coding assistants and autonomous agents:
+
+1. `read_sheet`: Read cells and tabular data with range and format scoping.
+2. `get_info`: Structural metadata inspection.
+3. `evaluate_formula`: Standalone or contextual formula evaluation.
+4. `edit_cell`: Atomic mutation of cells/ranges.
+5. `batch_edit`: Transactional multi-action editing with rollback guarantee.
+6. `render_chart`: Headless PNG chart rendering.
+7. `convert_file`: 8-way file format conversion.
+
+#### Client Configuration (e.g. Claude Desktop)
+Add the following entry to your `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "hasucalc": {
+      "command": "/path/to/hasucalc",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+For detailed protocol specifications, JSON schemas, and error contracts, see the authoritative specification in **[HEADLESS_SPEC.md](HEADLESS_SPEC.md)**.

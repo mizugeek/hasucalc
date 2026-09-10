@@ -22,6 +22,53 @@ DOS / PC-98 風の視認性に優れたTUIと、現代的な操作感（`Shift`+
 
 画面構成、`[READY]` / `[CALC]` の意味、関数の引数、メニュー、ファイル形式の詳細は **[ユーザーマニュアル](USER_MANUAL.ja.md)** を参照してください。
 
+## ヘッドレスCLI & MCPサーバー（AIエージェント・自動化連携）
+
+HasuCalc は画面（TUI）を開かずにコマンドラインやパイプラインから直接操作できるヘッドレスCLI、および LLM エージェントと直接通信可能な **Model Context Protocol (MCP)** stdio サーバーを外部依存ゼロで内蔵しています。
+
+### CLI 使用例
+
+```bash
+# ファイル形式の相互変換 (.xlsx, .ods, .csv, .tsv, .md, .html, .hwk, .hwkz)
+hasucalc convert input.xlsx output.hwk
+
+# セル・表データを Markdown またはスパースJSONで抽出
+hasucalc get sales.hwk -r A1:E10 --format markdown
+hasucalc get sales.hwk -r B2:D5 --json
+
+# 数式の即時計算（単発電卓、またはワークブックの値を参照した計算）
+hasucalc eval "=SUM(10, 20, 30) * 1.1"
+hasucalc eval -f sales.hwk "=XLOOKUP(23, A2:A25, B2:B25)"
+
+# セルの原子的更新と自動再計算
+hasucalc set sales.hwk B2 150
+hasucalc set sales.hwk D4 "=SUM(D2:D3)" --fmt "(C2)"
+
+# トランザクション一括アクション実行（失敗時は自動で完全ロールバック）
+cat actions.json | hasucalc batch sales.hwk
+
+# ヘッドレス 1280x720 HD PNG グラフ画像の生成
+hasucalc chart sales.hwk -o chart.png --type BAR --range-x A2:A10 --series-a B2:B10
+```
+
+### AIエージェント（MCPサーバー）設定
+
+Claude Desktop、Cursor、その他の MCP クライアントの設定ファイル（`claude_desktop_config.json` 等）に以下を追加するだけで連携できます：
+
+```json
+{
+  "mcpServers": {
+    "hasucalc": {
+      "command": "/path/to/hasucalc",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+提供される 7 つの MCP ツール: `read_sheet`, `get_info`, `evaluate_formula`, `edit_cell`, `batch_edit`, `render_chart`, `convert_file`  
+詳細なスキーマやオプション仕様は **[HEADLESS_SPEC.ja.md](HEADLESS_SPEC.ja.md)**（英語正本: [HEADLESS_SPEC.md](HEADLESS_SPEC.md)）を参照してください。
+
 ## キーバインド（要約）
 
 | キー | 動作 |

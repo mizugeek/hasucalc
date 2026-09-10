@@ -22,6 +22,53 @@ Ships as a single, self-contained, CGO-free Go binary: `hasucalc`.
 
 For screen layout, `[READY]` / `[CALC]` meanings, parameters of every function, menus, and file formats, see the **[User Manual](USER_MANUAL.md)**.
 
+## Headless CLI & MCP Server (AI Agents & Automation)
+
+HasuCalc includes a native, zero-dependency headless CLI and a built-in **Model Context Protocol (MCP)** server over `stdio` for LLM agents, CI/CD scripts, and terminal pipelines.
+
+### CLI Examples
+
+```bash
+# Convert between formats (.xlsx, .ods, .csv, .tsv, .md, .html, .hwk, .hwkz)
+hasucalc convert input.xlsx output.hwk
+
+# Extract table data as Markdown or sparse JSON
+hasucalc get sales.hwk -r A1:E10 --format markdown
+hasucalc get sales.hwk -r B2:D5 --json
+
+# Instant formula evaluation (standalone or with workbook context)
+hasucalc eval "=SUM(10, 20, 30) * 1.1"
+hasucalc eval -f sales.hwk "=XLOOKUP(23, A2:A25, B2:B25)"
+
+# Atomic cell update with automatic recalculation
+hasucalc set sales.hwk B2 150
+hasucalc set sales.hwk D4 "=SUM(D2:D3)" --fmt "(C2)"
+
+# Transactional batch execution (with complete rollback on failure)
+cat actions.json | hasucalc batch sales.hwk
+
+# Headless 1280x720 HD PNG chart generation
+hasucalc chart sales.hwk -o chart.png --type BAR --range-x A2:A10 --series-a B2:B10
+```
+
+### AI Agent / MCP Server Setup
+
+Connect HasuCalc to Claude Desktop, Cursor, or any MCP client by adding to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "hasucalc": {
+      "command": "/path/to/hasucalc",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Exposes 7 MCP tools: `read_sheet`, `get_info`, `evaluate_formula`, `edit_cell`, `batch_edit`, `render_chart`, and `convert_file`.  
+For complete schemas and CLI options, see **[HEADLESS_SPEC.md](HEADLESS_SPEC.md)**.
+
 ## Keybindings (summary)
 
 | Key | Action |
