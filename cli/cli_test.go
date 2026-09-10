@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"hasucalc/cell"
 	"hasucalc/cli"
 	"hasucalc/coord"
 	"hasucalc/sheet"
@@ -497,7 +498,7 @@ func TestChart_MissingOutputFlag(t *testing.T) {
 // ------------------- Dispatcher & Help Tests -------------------
 
 func TestDispatcher_SubcommandDetection(t *testing.T) {
-	valid := []string{"convert", "info", "get", "eval", "chart", "help"}
+	valid := []string{"convert", "info", "get", "eval", "chart", "set", "batch", "help"}
 	for _, v := range valid {
 		if !cli.IsSubcommand(v) {
 			t.Errorf("expected %s to be recognized as subcommand", v)
@@ -519,3 +520,231 @@ func TestDispatcher_HelpSubcommand(t *testing.T) {
 		t.Errorf("expected eval help text, got: %s", stdout)
 	}
 }
+
+// ------------------- Set Tests (Phase 2) -------------------
+
+func TestSet_SingleCell(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+
+	code, stdout, stderr := captureAll(func() int {
+		return cli.Run([]string{"set", hwkPath, "B2", "350", "-s", "Sales", "--json"})
+	})
+	if code != 0 {
+		t.Fatalf("set failed: code=%d, stderr=%s", code, stderr)
+	}
+
+	var resp cli.Response
+	if err := json.Unmarshal([]byte(stdout), &resp); err != nil {
+		t.Fatalf("invalid json: %v\n%s", err, stdout)
+	}
+	if !resp.OK || resp.Command != "set" {
+		t.Errorf("unexpected resp: %+v", resp)
+	}
+
+	// Verify persistence
+	wbAfter, err := sheet.LoadWorkbookJSON(hwkPath)
+	if err != nil {
+		t.Fatalf("failed to reload wb: %v", err)
+	}
+	sh := wbAfter.GetSheet("Sales")
+	cellB2 := sh.GetCell(1, 1)
+	if cellB2 == nil || cellB2.Value != 350.0 {
+		t.Errorf("expected 350.0, got %v", cellB2.Value)
+	}
+	// Verify sum recalculation at B4 (=SUM(B2:B3), 350 + 200 = 550)
+	cellB4 := sh.GetCell(1, 3)
+	if cellB4 == nil || cellB4.Value != 550.0 {
+		t.Errorf("expected recalculated sum 550.0, got %v", cellB4.Value)
+	}
+}
+
+func TestSet_RangeWithFormat(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+
+	code, _, stderr := captureAll(func() int {
+		return cli.Run([]string{"set", hwkPath, "D1:D3", "42", "-s", "Sales", "--fmt", "(F2)"})
+	})
+	if code != 0 {
+		t.Fatalf("set range failed: code=%d, stderr=%s", code, stderr)
+	}
+
+	wbAfter, _ := sheet.LoadWorkbookJSON(hwkPath)
+	sh := wbAfter.GetSheet("Sales")
+	for r := 0; r <= 2; r++ {
+		c := sh.GetCell(3, r)
+		if c == nil || c.Value != 42.0 {
+			t.Errorf("row %d: expected 42.0, got %v", r, c.Value)
+		}
+		if c.FormatSpec == nil || c.FormatSpec.Decimals != 2 {
+			t.Errorf("row %d: expected format (F2), got %v", r, c.FormatSpec)
+		}
+	}
+}
+
+func TestSet_DryRun(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+	beforeContent, _ := os.ReadFile(hwkPath)
+
+	code, stdout, stderr := captureAll(func() int {
+		return cli.Run([]string{"set", hwkPath, "B2", "9999", "-s", "Sales", "--dry-run"})
+	})
+	if code != 0 {
+		t.Fatalf("set dry-run failed: code=%d, stderr=%s", code, stderr)
+	}
+
+	var resp cli.Response
+	if err := json.Unmarshal([]byte(stdout), &resp); err != nil {
+		t.Fatalf("invalid json: %v\n%s", err, stdout)
+	}
+	if !resp.OK {
+		t.Errorf("expected ok: true, got %+v", resp)
+	}
+
+	// Verify disk file was NOT modified
+	afterContent, _ := os.ReadFile(hwkPath)
+	if !bytes.Equal(beforeContent, afterContent) {
+		t.Errorf("dry-run should not modify file on disk!")
+	}
+}
+
+func TestSet_SheetNotFound(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+
+	code, stdout, stderr := captureAll(func() int {
+		return cli.Run([]string{"set", hwkPath, "B2", "10", "-s", "NonExistentSheet", "--json"})
+	})
+	if code != 1 {
+		t.Errorf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr, "sheet not found") {
+		t.Errorf("expected 'sheet not found' in stderr, got: %s", stderr)
+	}
+	var resp cli.Response
+	json.Unmarshal([]byte(stdout), &resp)
+	if resp.Code != cli.CodeSheetNotFound {
+		t.Errorf("expected SHEET_NOT_FOUND code, got: %s", resp.Code)
+	}
+}
+
+// ------------------- Batch Tests (Phase 2) -------------------
+
+func TestBatch_MultiOperations(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+	tmpDir := t.TempDir()
+
+	script := `{
+		"actions": [
+			{ "op": "set_cell", "sheet": "Sales", "cell": "B2", "value": "800", "format": "(C2)" },
+			{ "op": "clear", "sheet": "Sales", "range": "C2:C3" },
+			{ "op": "add_sheet", "name": "Q3_Target" },
+			{ "op": "set_cell", "sheet": "Q3_Target", "cell": "A1", "value": "Projected" },
+			{ "op": "recalculate" }
+		]
+	}`
+	scriptPath := filepath.Join(tmpDir, "batch.json")
+	os.WriteFile(scriptPath, []byte(script), 0644)
+
+	code, stdout, stderr := captureAll(func() int {
+		return cli.Run([]string{"batch", hwkPath, "-f", scriptPath})
+	})
+	if code != 0 {
+		t.Fatalf("batch failed: code=%d, stderr=%s", code, stderr)
+	}
+
+	var resp cli.Response
+	if err := json.Unmarshal([]byte(stdout), &resp); err != nil {
+		t.Fatalf("invalid json: %v\n%s", err, stdout)
+	}
+	if !resp.OK || resp.Command != "batch" {
+		t.Errorf("unexpected response: %+v", resp)
+	}
+
+	// Verify changes persisted
+	wbAfter, _ := sheet.LoadWorkbookJSON(hwkPath)
+	shSales := wbAfter.GetSheet("Sales")
+	if shSales.GetCell(1, 1).Value != 800.0 {
+		t.Errorf("expected 800.0, got %v", shSales.GetCell(1, 1).Value)
+	}
+	// Cleared C2 and C3
+	if shSales.GetCell(2, 1) != nil && shSales.GetCell(2, 1).Value != nil && shSales.GetCell(2, 1).Type != cell.TypeEmpty {
+		t.Errorf("expected C2 to be empty, got %v", shSales.GetCell(2, 1).Value)
+	}
+	// Added Q3_Target sheet
+	shQ3 := wbAfter.GetSheet("Q3_Target")
+	if shQ3 == nil {
+		t.Fatalf("expected Q3_Target sheet to exist")
+	}
+	if shQ3.GetCell(0, 0).Value != "Projected" {
+		t.Errorf("expected 'Projected', got %v", shQ3.GetCell(0, 0).Value)
+	}
+}
+
+func TestBatch_RollbackOnFailure(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+	beforeContent, _ := os.ReadFile(hwkPath)
+	tmpDir := t.TempDir()
+
+	// Script where step 0 succeeds, but step 1 fails
+	script := `[
+		{ "op": "set_cell", "sheet": "Sales", "cell": "B2", "value": "99999" },
+		{ "op": "set_cell", "sheet": "NoSuchSheetExist", "cell": "A1", "value": "Fail" }
+	]`
+	scriptPath := filepath.Join(tmpDir, "fail_batch.json")
+	os.WriteFile(scriptPath, []byte(script), 0644)
+
+	code, stdout, stderr := captureAll(func() int {
+		return cli.Run([]string{"batch", hwkPath, "-f", scriptPath})
+	})
+	if code != 1 {
+		t.Errorf("expected exit code 1 for failing batch, got %d", code)
+	}
+	if !strings.Contains(stderr, "batch step 1") {
+		t.Errorf("expected error details in stderr, got: %s", stderr)
+	}
+
+	var resp cli.Response
+	if err := json.Unmarshal([]byte(stdout), &resp); err != nil {
+		t.Fatalf("invalid json: %v\n%s", err, stdout)
+	}
+	if resp.OK || resp.FailedStep != 1 || resp.CompletedSteps != 1 || resp.TotalSteps != 2 {
+		t.Errorf("unexpected error structure: %+v", resp)
+	}
+
+	// Verify rollback: original file on disk MUST NOT have changed!
+	afterContent, _ := os.ReadFile(hwkPath)
+	if !bytes.Equal(beforeContent, afterContent) {
+		t.Errorf("transaction rollback failed: original file on disk was modified!")
+	}
+}
+
+func TestBatch_DryRun(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+	beforeContent, _ := os.ReadFile(hwkPath)
+	tmpDir := t.TempDir()
+
+	script := `[
+		{ "op": "set_cell", "sheet": "Sales", "cell": "B2", "value": "777" }
+	]`
+	scriptPath := filepath.Join(tmpDir, "dry_batch.json")
+	os.WriteFile(scriptPath, []byte(script), 0644)
+
+	code, stdout, stderr := captureAll(func() int {
+		return cli.Run([]string{"batch", hwkPath, "-f", scriptPath, "--dry-run"})
+	})
+	if code != 0 {
+		t.Fatalf("batch dry-run failed: code=%d, stderr=%s", code, stderr)
+	}
+
+	var resp cli.Response
+	json.Unmarshal([]byte(stdout), &resp)
+	if !resp.OK {
+		t.Errorf("expected ok: true, got %+v", resp)
+	}
+
+	// Disk must be unmodified
+	afterContent, _ := os.ReadFile(hwkPath)
+	if !bytes.Equal(beforeContent, afterContent) {
+		t.Errorf("batch dry-run modified disk file!")
+	}
+}
+

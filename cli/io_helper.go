@@ -225,6 +225,32 @@ func SaveWorkbookAuto(wb *sheet.Workbook, targetSheetName, path, format string, 
 	}
 }
 
+// SaveWorkbookAtomic saves a workbook safely using a sibling temporary file and atomic rename.
+func SaveWorkbookAtomic(wb *sheet.Workbook, targetSheetName, path, format string, recalc bool) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	tmpFile, err := os.CreateTemp(dir, ".hasucalc-tmp-*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmpFile.Name()
+	tmpFile.Close()
+	defer os.Remove(tmpPath)
+
+	if format == "" {
+		format = DetectFormat(path)
+	}
+
+	if err := SaveWorkbookAuto(wb, targetSheetName, tmpPath, format, recalc); err != nil {
+		return err
+	}
+
+	return os.Rename(tmpPath, path)
+}
+
 // SaveWorkbookToWriter serializes a workbook to an io.Writer (e.g. stdout).
 func SaveWorkbookToWriter(wb *sheet.Workbook, targetSheetName string, w io.Writer, format string, recalc bool) error {
 	if recalc {

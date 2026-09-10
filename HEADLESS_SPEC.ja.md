@@ -292,6 +292,111 @@ hasucalc chart sales.xlsx -s "2026" --type BAR --title "地域別売上" -x "A2:
 
 ---
 
+### 3.6 `hasucalc set`
+単一セルまたは矩形セル範囲に対し、数値、文字列ラベル、計算式、および表示書式を直接設定します。
+
+```
+Usage:
+  hasucalc set <input> <target> <value> [flags]
+
+Flags:
+  -s, --sheet <name>     対象シート名（省略時: アクティブシート）。
+  -o, --output <path>    出力先パス。省略時は <input> ファイルを原子的（atomic）にインプレース上書き保存。"-" 指定で標準出力へ書き出し。
+      --fmt <format>     セル表示書式記述子 例: "(F1)", "(C2)", "(P0)"。
+      --recalc           セル変更後にワークブック全体を再計算（デフォルト: true）。
+      --no-recalc        自動再計算を無効化。
+      --dry-run          ディスクへの書き込みを行わず、メモリ上で変更と再計算結果をシミュレーションしてJSONプレビューを返却。
+      --json             変更結果と影響を受けたセルのメタデータを構造化JSONで出力。
+```
+
+**使用例:**
+```bash
+# B2 セルの数値を上書き保存
+hasucalc set sales.hwk B2 "150"
+
+# 計算式を挿入し自動再計算
+hasucalc set sales.hwk B5 "=SUM(B2:B4)"
+
+# 範囲全体に通貨書式を設定
+hasucalc set sales.hwk B2:B10 "0" --fmt "(C2)"
+
+# AIエージェントによる事前検証（dry-run）
+hasucalc set sales.hwk B2 "999" --dry-run
+```
+
+**JSON 出力スキーマ (`hasucalc set sales.hwk B2 "150" --json`):**
+```json
+{
+  "ok": true,
+  "command": "set",
+  "meta": {
+    "file": "sales.hwk",
+    "sheet": "Sales",
+    "target": "B2",
+    "saved": true,
+    "dryRun": false,
+    "recalcMode": "AUTO"
+  },
+  "affected": [
+    { "ref": "B2", "r": 1, "c": 1, "type": "NUMBER", "raw": "150", "val": 150 }
+  ]
+}
+```
+
+---
+
+### 3.7 `hasucalc batch`
+JSONファイルまたは標準入力（Unix パイプライン）から、一連の編集アクションをトランザクションとして原子的に一括実行します。
+
+```
+Usage:
+  hasucalc batch <input> [flags]
+  hasucalc batch <input> -f <script.json> [flags]
+  cat script.json | hasucalc batch <input> [flags]
+
+Flags:
+  -s, --sheet <name>     シート名が省略されたアクションにおけるデフォルトシート名。
+  -o, --output <path>    出力先パス。省略時はインプレース上書き保存。
+  -f, --file <path>      バッチスクリプトJSONファイルのパス（省略時または "-" で標準入力から読み込み）。
+      --recalc           全アクション完了後に再計算を実行（デフォルト: true）。
+      --no-recalc        完了後の再計算を無効化。
+      --dry-run          ディスクを変更せずにメモリ上で全アクションを実行。
+```
+
+#### バッチアクション種別（Action Vocabulary）
+| 操作名 (`op`) | パラメータ | 説明 |
+|:---|:---|:---|
+| `set_cell` | `cell` (A1形式), `value`, 任意: `sheet`, `format` | 単一セルの値・式・書式を設定 |
+| `set_range` | `range` (A1:B2), `values` (単一値または配列), 任意: `sheet`, `format` | 矩形範囲を一括入力 |
+| `clear` | `range` または `cell`, 任意: `sheet` | 指定範囲のセル値・数式を消去 |
+| `format` | `range`, `format`, 任意: `sheet` | 指定範囲に表示書式を適用 |
+| `insert_row` | `row` (1基数または0基数), `count`, 任意: `sheet` | 行を挿入（数式参照自動シフト） |
+| `delete_row` | `row`, `count`, 任意: `sheet` | 行を削除（数式参照自動シフト） |
+| `insert_col` | `col` (列英字または0基数), `count`, 任意: `sheet` | 列を挿入（数式参照自動シフト） |
+| `delete_col` | `col`, `count`, 任意: `sheet` | 列を削除（数式参照自動シフト） |
+| `add_sheet` | `name` | 新規ワークシートを追加 |
+| `rename_sheet`| `old_name`, `new_name` | シート名を変更し関連数式参照を更新 |
+| `delete_sheet`| `name` | シートを削除し関連数式参照を無効化 |
+| `recalculate` | （なし） | ワークブック全体の明示的な再計算を実行 |
+
+#### トランザクション＆ロールバック保証
+バッチ実行中のいずれかのステップでエラー（シート未存在、セル座標構文エラー、境界違反等）が発生した場合、処理は即座に中断されます：
+- 対象ファイルへの**書き込みは一切行われません**（ロールバック・原子的整合性を保証）。
+- 終了コード Exit `1` とともに、失敗したステップ番号（`failed_step`）、完了したステップ数、およびエラー詳細JSONを出力します：
+```json
+{
+  "ok": false,
+  "command": "batch",
+  "error": "sheet not found: 'Sheet9'",
+  "code": "SHEET_NOT_FOUND",
+  "failed_step": 2,
+  "completed_steps": 1,
+  "total_steps": 5
+}
+```
+
+---
+
 ## 4. 共通 JSON スキーマ仕様
 
 ### 4.1 Meta オブジェクト
@@ -345,8 +450,8 @@ hasucalc chart sales.xlsx -s "2026" --type BAR --title "地域別売上" -x "A2:
 
 | フェーズ | 提供機能 | インターフェース |
 |:---|:---|:---|
-| **Phase 1**（現在） | `convert`, `info`, `get`, `eval`, `chart` ＋ stdin/stdout パイプ | CLI コマンド (`hasucalc <subcommand>`) |
-| **Phase 2** | `set` (単一/複数セルの更新), `batch` (JSON一括アクション実行) | CLI コマンド (`hasucalc set`, `hasucalc batch`) |
-| **Phase 3** | 内蔵 MCP サーバー (Model Context Protocol) 1:1 ラッパー | Stdio プロトコル (`hasucalc mcp`) |
+| **Phase 1** (完了) | `convert`, `info`, `get`, `eval`, `chart` + stdin/stdout pipes | CLI コマンド (`hasucalc <subcommand>`) |
+| **Phase 2** (実装完了) | `set` (単一/複数セルの更新), `batch` (JSON一括アクション実行) | CLI コマンド (`hasucalc set`, `hasucalc batch`) |
+| **Phase 3** (計画) | 内蔵 MCP サーバー (Model Context Protocol: stdio 経由) | Stdio プロトコル (`hasucalc mcp`) |
 
 Phase 1 でこの厳格な仕様と出力契約を確立することで、Phase 3 の MCP ツール（`read_sheet`, `evaluate_formula`, `convert_file`, `render_chart`）は、CLI と全く同一の Go ヘッドレスコア関数を呼ぶだけの薄いアダプタとして安全・迅速に実装されます。

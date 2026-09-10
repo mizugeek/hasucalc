@@ -292,6 +292,111 @@ hasucalc chart sales.xlsx -s "2026" --type BAR --title "Revenue by Region" -x "A
 
 ---
 
+### 3.6 `hasucalc set`
+Mutates a single cell or rectangular cell range with a literal value, label string, formula expression, and optional display format.
+
+```
+Usage:
+  hasucalc set <input> <target> <value> [flags]
+
+Flags:
+  -s, --sheet <name>     Target sheet name (default: active sheet).
+  -o, --output <path>    Output destination path. Defaults to overwriting <input> in-place atomically. If "-", writes to stdout.
+      --fmt <format>     Cell display format descriptor e.g. "(F1)", "(C2)", "(P0)".
+      --recalc           Recalculate workbook after mutation (default: true).
+      --no-recalc        Disable automatic recalculation.
+      --dry-run          Simulate mutation in-memory and return JSON preview without writing to disk.
+      --json             Output mutation result metadata in structured JSON.
+```
+
+**Examples:**
+```bash
+# Update single numeric cell in place
+hasucalc set sales.hwk B2 "150"
+
+# Insert formula with auto-recalculation
+hasucalc set sales.hwk B5 "=SUM(B2:B4)"
+
+# Format a range with currency formatting
+hasucalc set sales.hwk B2:B10 "0" --fmt "(C2)"
+
+# Dry-run validation for AI agent self-check
+hasucalc set sales.hwk B2 "999" --dry-run
+```
+
+**JSON Output Schema (`hasucalc set sales.hwk B2 "150" --json`):**
+```json
+{
+  "ok": true,
+  "command": "set",
+  "meta": {
+    "file": "sales.hwk",
+    "sheet": "Sales",
+    "target": "B2",
+    "saved": true,
+    "dryRun": false,
+    "recalcMode": "AUTO"
+  },
+  "affected": [
+    { "ref": "B2", "r": 1, "c": 1, "type": "NUMBER", "raw": "150", "val": 150 }
+  ]
+}
+```
+
+---
+
+### 3.7 `hasucalc batch`
+Executes an ordered batch of mutation actions atomically from a JSON file or Unix `stdin` pipeline.
+
+```
+Usage:
+  hasucalc batch <input> [flags]
+  hasucalc batch <input> -f <script.json> [flags]
+  cat script.json | hasucalc batch <input> [flags]
+
+Flags:
+  -s, --sheet <name>     Default sheet name for actions omitting sheet.
+  -o, --output <path>    Output destination path. Defaults to in-place atomic overwrite.
+  -f, --file <path>      Path to JSON batch script file (reads from stdin if omitted or "-").
+      --recalc           Recalculate prior to saving (default: true).
+      --no-recalc        Disable final recalculation.
+      --dry-run          Execute all actions in memory without writing to disk.
+```
+
+#### Batch JSON Action Vocabulary
+| Action (`op`) | Parameters | Description |
+|:---|:---|:---|
+| `set_cell` | `cell` (A1), `value`, optional `sheet`, `format` | Sets cell value/formula and format |
+| `set_range` | `range` (A1:B2), `values` (scalar or array), optional `sheet`, `format` | Fills rectangular range |
+| `clear` | `range` or `cell`, optional `sheet` | Clears content and formulas in range |
+| `format` | `range`, `format`, optional `sheet` | Applies format descriptor across range |
+| `insert_row` | `row` (1-indexed or 0-indexed int), `count`, optional `sheet` | Inserts empty rows |
+| `delete_row` | `row`, `count`, optional `sheet` | Deletes rows and updates references |
+| `insert_col` | `col` (letter or 0-indexed int), `count`, optional `sheet` | Inserts empty columns |
+| `delete_col` | `col`, `count`, optional `sheet` | Deletes columns and updates references |
+| `add_sheet` | `name` | Adds a new empty sheet to workbook |
+| `rename_sheet`| `old_name`, `new_name` | Renames sheet and updates cross-references |
+| `delete_sheet`| `name` | Deletes sheet and invalidates cross-references |
+| `recalculate` | (none) | Explicitly triggers full recalculation |
+
+#### Transactional Rollback Guarantee
+If any operation fails (e.g. invalid syntax, missing sheet, out-of-bounds error), execution is halted immediately:
+- The target file on disk is **never modified** (zero partial writes).
+- An Exit `1` code is returned with a diagnostic JSON payload indicating `failed_step`, `completed_steps`, and error details:
+```json
+{
+  "ok": false,
+  "command": "batch",
+  "error": "sheet not found: 'Sheet9'",
+  "code": "SHEET_NOT_FOUND",
+  "failed_step": 2,
+  "completed_steps": 1,
+  "total_steps": 5
+}
+```
+
+---
+
 ## 4. Shared JSON Schema Specifications
 
 ### 4.1 Meta Object Schema
@@ -345,8 +450,8 @@ hasucalc chart sales.xlsx -s "2026" --type BAR --title "Revenue by Region" -x "A
 
 | Phase | Deliverables | Interface |
 |:---|:---|:---|
-| **Phase 1** (Current) | `convert`, `info`, `get`, `eval`, `chart` + stdin/stdout pipes | CLI binary (`hasucalc <subcommand>`) |
-| **Phase 2** | `set` (single/multi-cell update), `batch` (JSON transactional actions) | CLI binary (`hasucalc set`, `hasucalc batch`) |
-| **Phase 3** | Built-in MCP Server (Model Context Protocol) wrapping Phase 1 & 2 1:1 | Stdio protocol (`hasucalc mcp`) |
+| **Phase 1** (Completed) | `convert`, `info`, `get`, `eval`, `chart` + stdin/stdout pipes | CLI binary (`hasucalc <subcommand>`) |
+| **Phase 2** (Implemented) | `set` (single/multi-cell update), `batch` (JSON transactional actions) | CLI binary (`hasucalc set`, `hasucalc batch`) |
+| **Phase 3** (Planned) | Built-in MCP Server (Model Context Protocol) wrapping Phase 1 & 2 1:1 | Stdio protocol (`hasucalc mcp`) |
 
 By establishing this rigorous specification in Phase 1, HasuCalc guarantees that Phase 3 MCP tools (`read_sheet`, `evaluate_formula`, `convert_file`, `render_chart`) will map directly to the proven Go headless functions with zero structural divergence.

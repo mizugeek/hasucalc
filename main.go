@@ -137,7 +137,7 @@ func main() {
 			fmt.Printf("HasuCalc %s - Modern Terminal Spreadsheet (CLI / TUI)\n\n", Version)
 			fmt.Println("Usage:")
 			fmt.Println("  hasucalc [file]                 Open a spreadsheet file (.hwk, .hwkz, .xlsx, .ods, .csv, .md, .html)")
-			fmt.Println("  hasucalc <subcommand> [flags]   Run headless command (convert, info, get, eval, chart)")
+			fmt.Println("  hasucalc <subcommand> [flags]   Run headless command (convert, info, get, eval, chart, set, batch)")
 			fmt.Println("  hasucalc --demo, -d             Launch with preloaded sample traffic & graph demo data")
 			fmt.Println("  hasucalc --version, -v          Print version information and exit")
 			fmt.Println("  hasucalc --help, -h             Show this help message and exit")
@@ -147,6 +147,8 @@ func main() {
 			fmt.Println("  get        Extract cell data (sparse JSON, Markdown tables, CSV, or values)")
 			fmt.Println("  eval       Evaluate formulas immediately (standalone or in workbook context)")
 			fmt.Println("  chart      Render HD PNG charts from sheet data without terminal screen")
+			fmt.Println("  set        Mutate cell values, formulas, or formats with atomic persistence")
+			fmt.Println("  batch      Execute transactional mutation actions from JSON script or stdin")
 			os.Exit(0)
 		} else if arg == "--demo" || arg == "-d" {
 			sh = createDemoSheet()

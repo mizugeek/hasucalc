@@ -8,13 +8,15 @@ import (
 	"hasucalc/version"
 )
 
-// Subcommands supported in Phase 1
+// Subcommands supported in HasuCalc CLI
 var subcommands = map[string]bool{
 	"convert": true,
 	"info":    true,
 	"get":     true,
 	"eval":    true,
 	"chart":   true,
+	"set":     true,
+	"batch":   true,
 	"help":    true,
 }
 
@@ -50,6 +52,10 @@ func Run(args []string) int {
 		return RunEval(cmdArgs)
 	case "chart":
 		return RunChart(cmdArgs)
+	case "set":
+		return RunSet(cmdArgs)
+	case "batch":
+		return RunBatch(cmdArgs)
 	case "help":
 		if len(cmdArgs) > 0 {
 			PrintSubcommandHelp(cmdArgs[0])
@@ -77,6 +83,10 @@ func PrintSubcommandHelp(cmd string) {
 		PrintEvalHelp()
 	case "chart":
 		PrintChartHelp()
+	case "set":
+		PrintSetHelp()
+	case "batch":
+		PrintBatchHelp()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown subcommand '%s'\n", cmd)
 		PrintUsage()
@@ -96,6 +106,8 @@ Available Commands:
   get        Extract cell data (sparse JSON, Markdown tables, CSV, or values)
   eval       Evaluate formulas immediately (standalone or in workbook context)
   chart      Render HD PNG charts from sheet data without terminal screen
+  set        Mutate cell values, formulas, or formats with atomic persistence
+  batch      Execute transactional mutation actions from JSON script or stdin
   help       Help about any command
 
 Run 'hasucalc <command> --help' for details on each subcommand.
