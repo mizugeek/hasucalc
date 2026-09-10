@@ -42,13 +42,13 @@ func InitStyles() Styles {
 
 	return Styles{
 		Default:       tcell.StyleDefault.Background(blackBg).Foreground(whiteFg),
-		Header:        tcell.StyleDefault.Background(cyanBg).Foreground(blackFg).Bold(true),
+		Header:        tcell.StyleDefault.Background(cyanBg).Foreground(whiteFg).Bold(true),
 		CellCursor:    tcell.StyleDefault.Background(cyanFg).Foreground(blackFg).Bold(true),
-		MenuSel:       tcell.StyleDefault.Background(cyanBg).Foreground(blackFg).Bold(true),
+		MenuSel:       tcell.StyleDefault.Background(cyanBg).Foreground(whiteFg).Bold(true),
 		MenuText:      tcell.StyleDefault.Background(blackBg).Foreground(whiteFg),
 		MenuDesc:      tcell.StyleDefault.Background(blackBg).Foreground(tcell.ColorLightGray),
 		Status:        tcell.StyleDefault.Background(blackBg).Foreground(tcell.ColorLightCyan),
-		ModeBox:       tcell.StyleDefault.Background(cyanBg).Foreground(blackFg).Bold(true),
+		ModeBox:       tcell.StyleDefault.Background(cyanBg).Foreground(whiteFg).Bold(true),
 		ActiveTab:     tcell.StyleDefault.Background(cyanFg).Foreground(blackFg).Bold(true),
 		InactiveTab:   tcell.StyleDefault.Background(tcell.ColorNavy).Foreground(tcell.ColorLightGray),
 		TabArrow:      tcell.StyleDefault.Background(blackBg).Foreground(yellowFg).Bold(true),
