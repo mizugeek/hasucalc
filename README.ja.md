@@ -4,11 +4,11 @@
 > **ユーザーマニュアル（詳細）:** [USER_MANUAL.md](USER_MANUAL.md)（[日本語](USER_MANUAL.ja.md)）  
 > 技術仕様: [SPECIFICATION.md](SPECIFICATION.md)（[日本語](SPECIFICATION.ja.md)）
 
-DOS / PC-98 風の見た目に、現代的な編集操作（`Shift`+矢印、`Ctrl+C/V/S`、`Ctrl+K`、`=SUM(A1:B10)`）を足したターミナル表計算です。
+DOS / PC-98 風の視認性に優れたTUIと、現代的な操作感（`Shift`+矢印での範囲選択、`Ctrl+C/V/S`、`Ctrl+K` コマンドパレット、`=SUM(A1:B10)` などの数式）を融合した高速・軽量なターミナル表計算ソフトウェアです。
 
-**Excel 互換アプリではありません。** 正本は `.hwk` / `.hwkz`。`.xlsx` / `.ods` / `.csv` / `.md` / `.html` はデータ受け渡し用の橋渡しです。
+標準フォーマットには Git や AI（LLM）と親和性の高い `.hwk`（コンパクトJSON）/ `.hwkz`（gzip）を採用。外部ファイル（`.xlsx`, `.ods`, `.csv`, `.md`, `.html`）とのインポート・エクスポートによるデータ連携にも対応しています。
 
-CGO 不要の単一バイナリ: `hasucalc`。
+外部依存（CGO）なしの単一バイナリとして動作します。
 
 ## クイックスタート
 

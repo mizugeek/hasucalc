@@ -559,7 +559,7 @@ Functions accept either `@NAME(...)` or `NAME(...)` after `=`.
 | `PAYMT` | `PMT` |
 | `MULTIPLY` | `PRODUCT` |
 | `STD` | `STDEV.P` / `STDEVP` |
-| `STRING` | Lotus-style number→text |
+| `STRING` | Number to fixed-decimal text (compatibility) |
 | `CONCATENATE` | `CONCAT` (also listed) |
 
 ---
@@ -594,7 +594,7 @@ Functions accept either `@NAME(...)` or `NAME(...)` after `=`.
 | `PAYMT` | `PMT` |
 | `MULTIPLY` | `PRODUCT` |
 | `STD` | `STDEV.P` / `STDEVP` |
-| `STRING` | Lotus 系の数値→文字列 |
+| `STRING` | 数値を固定小数点表記の文字列に変換（互換用） |
 | `CONCATENATE` | `CONCAT`（一覧にもあり） |
 
 ---

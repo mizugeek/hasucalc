@@ -4,11 +4,11 @@
 > **User manual (detailed):** [USER_MANUAL.md](USER_MANUAL.md) ([日本語](USER_MANUAL.ja.md))  
 > Engineering specification: [SPECIFICATION.md](SPECIFICATION.md) ([日本語](SPECIFICATION.ja.md))
 
-Terminal spreadsheet with a classic DOS / PC-98 feel and modern editing (`Shift`+arrows, `Ctrl+C/V/S`, `Ctrl+K`, `=SUM(A1:B10)`).
+Fast and lightweight terminal spreadsheet combining the clean clarity of a classic DOS / PC-98 interface with modern editing (`Shift`+arrows, `Ctrl+C/V/S`, `Ctrl+K` palette, `=SUM(A1:B10)` formulas).
 
-**Not an Excel-compatible app.** Native formats are `.hwk` / `.hwkz`. `.xlsx` / `.ods` / `.csv` / `.md` / `.html` are convenience bridges only.
+Uses compact `.hwk` (JSON) and `.hwkz` (gzip) as native, Git- and LLM-friendly file formats, with import/export support for tabular formats (`.xlsx`, `.ods`, `.csv`, `.md`, `.html`).
 
-Single CGO-free Go binary: `hasucalc`.
+Ships as a single, self-contained, CGO-free Go binary: `hasucalc`.
 
 ## Quick start
 

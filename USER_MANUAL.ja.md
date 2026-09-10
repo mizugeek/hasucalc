@@ -4,7 +4,7 @@
 > 概要: [README.md](README.md)（[日本語](README.ja.md)） · 技術仕様: [SPECIFICATION.md](SPECIFICATION.md)（[日本語](SPECIFICATION.ja.md)）  
 > 差分がある場合は英語版ユーザーマニュアルを優先してください。
 
-画面の見方、`[READY]` などのモード表示、キー操作、ファイル形式、および組み込み関数の引数を説明します。HasuCalc は **Excel 互換アプリではありません**。正本は `.hwk` / `.hwkz` です。`=` 数式や `.xlsx` / `.ods` / `.md` / `.html` は利便のための橋渡しです。
+画面の見方、`[READY]` などの操作モード、キーバインド、対応ファイル形式、および組み込み関数の構文と引数を分かりやすく解説します。標準の保存形式は `.hwk` / `.hwkz` で、`.xlsx` / `.ods` / `.csv` / `.md` / `.html` とのデータ連携にも対応しています。
 
 ---
 
@@ -52,7 +52,7 @@
 | **`[POINT]`** | 数式入力中に、カーソルやマウスでセル／範囲を指して参照を挿入している状態。 |
 | **`[MENU]`** | スラッシュメニュー（`/`）が開いている。 |
 | **`[PROMPT]`** | 検索・ジャンプ・書式記号など、対話入力待ち。 |
-| **`[END]`** | Lotus 風 End モード。End のあと矢印で、データ塊の端へジャンプ。 |
+| **`[END]`** | End モード。End を押した後に矢印キーを押すと、連続するデータ領域の端へジャンプ。 |
 
 ---
 
@@ -82,13 +82,13 @@
 
 ### 数式の要点
 
-- `=SUM(A1:B10)` と `@SUM(A1..B10)` の両方可（`=` は利便であり Excel 互換を意味しない）。
-- 範囲は `A1:B10` と `A1..B10`。全列 `A:A` は used range までに制限。
-- 他シート: `Sheet2!A1` や `'Q1-2024'!A1`。
-- 絶対／複合参照: `$A$1`, `$A1`, `A$1`。
-- 真偽: `TRUE` / `FALSE`（および `TRUE()` / `FALSE()`）。
-- Lotus 論理: `#AND#`, `#OR#`, `#NOT#`。
-- 単項マイナスは `^` より強い: `-2^2` → `4`。
+- 標準の `=SUM(A1:B10)` に加え、クラシックな `@SUM(A1..B10)` や `+` から始まる数式記法にも対応。
+- 範囲指定はコロン（`A1:B10`）とピリオド（`A1..B10`）の両方に対応。全列参照（`A:A`）はデータ実領域（used range）までに自動制限。
+- シート間参照: `Sheet2!A1` や、空白・記号を含む場合の `'Q1-2024'!A1`。
+- 絶対参照／複合参照: `$A$1`, `$A1`, `A$1`。
+- 真偽値: `TRUE` / `FALSE`（および `TRUE()` / `FALSE()`）。
+- 論理演算子: 式中で `#AND#`, `#OR#`, `#NOT#` が利用可能（例: `+A1>10#AND#B1<20`）。
+- べき乗と単項マイナス: 単項マイナスが `^` より優先（`-2^2` → `(-2)^2` = `4`。負の累乗は `-(2^2)` = `-4`）。
 
 関数一覧ブラウザは **`/IF`**（Insert → Function）またはパレットから。関数の説明は本節を日本語で記載しています。
 
@@ -174,7 +174,7 @@ CLI（`hasucalc file.md`）または **Ctrl+O**（`.md` / `.html` も一覧に�
 
 - シートあたり1つの設定（系列 A〜F）: Line / Bar / Stacked / Pie。
 - **F10** で端末プレビュー、**S** で 1280×720 PNG。
-- 設定の永続化は `.hwk` / `.hwkz` のみ（Excel/ODS には書かない）。
+- 設定の永続化は `.hwk` / `.hwkz` に行われます（外部形式 `.xlsx` / `.ods` には表データのみを出力）。
 
 ---
 
@@ -335,7 +335,7 @@ CLI（`hasucalc file.md`）または **Ctrl+O**（`.md` / `.html` も一覧に�
 | `LEN` | `LEN(text)` | `text`: 文字列 | 文字数 |
 | `FIND` | `FIND(find_text, within_text, [start])` | `find_text`: 探す部分文字列<br>`within_text`: 検索対象の文字列<br>`start`（省略可）: 検索開始位置（1始まり） | 大文字小文字を区別して位置検索（1始まり） |
 | `SEARCH` | `SEARCH(find_text, within_text, [start])` | `find_text`: 探す部分文字列<br>`within_text`: 検索対象の文字列<br>`start`（省略可）: 検索開始位置（1始まり） | 大文字小文字無視・ワイルドカード対応の位置検索 |
-| `STRING` | `STRING(number, decimal_places)` | `number`: 数値<br>`decimal_places`: 小数点以下の桁数 | 小数桁固定で数値を文字列化（Lotus 系） |
+| `STRING` | `STRING(number, decimal_places)` | `number`: 数値<br>`decimal_places`: 小数点以下の桁数 | 小数桁数を固定して数値を文字列に変換 |
 | `VALUE` | `VALUE(text)` | `text`: 文字列 | 通貨記号・カンマ付き文字列を数値に |
 | `NUMBERVALUE` | `NUMBERVALUE(text, [dec_sep], [group_sep])` | `text`: 文字列<br>`dec_sep`（省略可）: 小数点に使う文字<br>`group_sep`（省略可）: 桁区切りに使う文字 | 小数点・桁区切りを指定して数値化 |
 | `TEXTBEFORE` | `TEXTBEFORE(text, delimiter)` | `text`: 文字列<br>`delimiter`: 区切り文字列 | 区切りより前の文字列 |
@@ -394,7 +394,7 @@ CLI（`hasucalc file.md`）または **Ctrl+O**（`.md` / `.html` も一覧に�
 | `PAYMT` | `PMT` |
 | `MULTIPLY` | `PRODUCT` |
 | `STD` | `STDEV.P` / `STDEVP` |
-| `STRING` | Lotus 系の数値→文字列 |
+| `STRING` | 数値を固定小数点表記の文字列に変換（互換用） |
 | `CONCATENATE` | `CONCAT`（一覧にもあり） |
 
 ---
@@ -403,11 +403,11 @@ CLI（`hasucalc file.md`）または **Ctrl+O**（`.md` / `.html` も一覧に�
 
 | 表示 | 意味 |
 |:---|:---|
-| `ERR` | 一般的な数式／値エラー（Excel の `#VALUE!` 等には細分しない）。 |
+| `ERR` | 一般的な数式・計算エラー（ゼロ除算や不正な引数など）。 |
 | `NA` | 未発見・欠落（lookup 失敗、`NA()` など）。 |
 | `CIRCULAR REF` | 循環参照。 |
 | `#REF!` | 壊れた参照（削除されたシートなど）。 |
 | “Clipboard is empty!” | コピーなしで貼り付け。 |
 | “Imported markup from …” | `.md` / `.html` の取り込み成功。 |
 
-不具合と仕様差の契約は [SPECIFICATION.md](SPECIFICATION.md) §1.4（[日本語](SPECIFICATION.ja.md)）を参照。
+仕様方針と動作保証範囲の詳細は [SPECIFICATION.md](SPECIFICATION.md) §1.4（[日本語](SPECIFICATION.ja.md)）を参照。

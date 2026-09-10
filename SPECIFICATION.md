@@ -11,7 +11,7 @@ Official documentation for the modern terminal spreadsheet **HasuCalc 2.0**: arc
 ## Contents
 
 1. [Overview & design](#1-overview--design)
-   - [1.4 Spec contract (bugs vs intentional differences)](#14-spec-contract-bugs-vs-intentional-differences)
+   - [1.4 Specification policy and core guarantees](#14-specification-policy-and-core-guarantees)
 2. [Architecture & packages](#2-architecture--packages)
 3. [Feature specification](#3-feature-specification)
    - [3.1 Cells, sheets, workbooks](#31-cells-sheets-workbooks)
@@ -36,7 +36,7 @@ Official documentation for the modern terminal spreadsheet **HasuCalc 2.0**: arc
 ### 1.1 Overview
 **HasuCalc** is a fast, lightweight terminal spreadsheet (CLI / TUI) written from scratch in Go. It ships as a fully self-contained, CGO-free binary and starts quickly on macOS, Linux, and Windows terminals.
 
-**Not an Excel-compatible app.** The authoritative model is HasuCalc’s own model and `.hwk` / `.hwkz`. `.xlsx` / `.ods` are **convenience bridges** for exchanging tabular data; reproducing Excel / LibreOffice features or layout is not a goal.
+**Design independence and data interoperability**: HasuCalc is an independent terminal spreadsheet application whose authoritative model and native formats are `.hwk` / `.hwkz`. Support for external formats like `.xlsx` and `.ods` serves as a bridge for exchanging tabular data, not as a clone or replica of other software.
 
 ### 1.2 Core design principles
 1. **Modern editing + retro TUI**: Keep PC-98 / DOS clarity and speed while adding familiar selection, `Ctrl+C/X/V/Z/Y`, a VS Code-like `Ctrl+K` palette, and native mouse support.
@@ -52,75 +52,62 @@ hasucalc --version, -v  # Version (HasuCalc 2.0.2, Go runtime, OS/Arch)
 hasucalc --help, -h     # Help
 ```
 
-### 1.4 Spec contract (bugs vs intentional differences)
+### 1.4 Specification policy and core guarantees
 
-HasuCalc is neither a clone nor a compatibility product for Excel. **Only mismatches between this document and the implementation are bugs.** Differences from Excel / LibreOffice that are not written here are intentional and are not fix targets.
+The architecture and behavior documented here represent the authoritative specification for HasuCalc. The application accepts both standard spreadsheet notation and classic syntax while maintaining a streamlined model optimized for terminal environments.
 
-Lotus 1-2-3-style and familiar `=` / `A1:B10` notation are **both accepted** (the latter for convenience—not “Excel compatibility”). Evaluation, errors, and I/O scope follow the tables below.
+#### 1. Core behavioral guarantees
 
-#### Guaranteed (core — breakage here is a bug)
+The following features and behaviors are guaranteed as HasuCalc's core specification:
+* **Sparse-matrix grid**: Supports up to 1,048,576 rows × 16,384 columns (`A`–`XFD`), allocating memory only for cells in use.
+* **Cell types and prefixes**: Full preservation of `NUMBER`, `LABEL` (`'` left, `"` right, `^` center), `FORMULA`, `BOOLEAN`, and `EMPTY` (§3.1).
+* **Formula engine**: Lexing, parsing, and evaluation; circular reference detection (`CIRCULAR REF`); automatic recalculation in AUTO mode.
+* **Reference retargeting**: Cell references update automatically across row/column insert/delete, cut/copy/paste, and sheet add/delete/rename (invalid references become `#REF!`).
+* **Native format integrity**: Complete round-trip preservation of cell values, formulas, names, chart settings, and recalculation modes in `.hwk` / `.hwkz`.
+* **Tabular data interoperability**: Accurate round-trip preservation of tabular data (cells, formulas, named ranges, freeze panes, recalculation mode) in `.xlsx` and `.ods` (charts and presentation objects are out of scope; §3.9).
+* **Cell coordinate functions**: Argument-less `ROW()` / `COLUMN()` return the formula cell’s own row / column index.
 
-* Sparse grid (max 1,048,576×16,384; store used cells only).
-* Cell types NUMBER / LABEL / FORMULA / BOOLEAN / EMPTY and input prefixes (§3.1).
-* Formula lexing / parsing / evaluation, circular-ref detection, workbook recalc in AUTO mode.
-* Reference retargeting on row/column insert/delete, cut/copy/paste, and sheet rename/delete (broken refs become `#REF!` or quoted sheet names).
-* Native `.hwk` / `.hwkz` round-trip preserves values, formulas, names, chart settings, and recalc mode.
-* XLSX / ODS round-trip preserves **tabular data** (cells, formulas, names, freeze panes, recalc mode). String literals and `value-type="string"` are not re-interpreted. These bridges do **not** guarantee Excel / LibreOffice features, display, or charts.
-* Argument-less `ROW()` / `COLUMN()` return the formula cell’s own row / column.
+#### 2. Formula and syntax support
 
-#### Lotus 1-2-3 family (intentional; may differ from Excel)
+HasuCalc supports both standard formula syntax and classic syntax conventions:
 
-| Topic | HasuCalc behavior |
+| Element | Standard syntax | Classic syntax | Notes |
+|---|---|---|---|
+| Formula prefix | `=` (e.g. `=SUM(A1:B10)`) | `@` (e.g. `@SUM(A1..B10)`), `+` (e.g. `+A1+B1`) | All are parsed and evaluated as formulas |
+| Range separator | `:` (e.g. `A1:B10`) | `..` (e.g. `A1..B10`) | Whole-column references like `A:A` stop at the used range |
+| Logical operators | Functions `AND()`, `OR()`, `NOT()` | Inline `#AND#`, `#OR#`, `#NOT#` | Can be used directly within expressions |
+| Function aliases | Canonical (`AVERAGE`, `LEN`, `REPT`, `PMT`, `PRODUCT`, `STDEV.P`) | Aliases (`AVG`, `LENGTH`, `REPEAT`, `PAYMT`, `MULTIPLY`, `STD`, `STRING`) | Evaluated identically to canonical names |
+| Scientific format | `(E2)` (e.g. `1.23E+04`) | `(S2)` | Supported as alias |
+| Operator precedence | Unary minus binds tighter than `^` | — | `-2^2` evaluates to `(-2)^2` = `4` (use `-(2^2)` for `-4`) |
+
+#### 3. Error handling taxonomy
+
+HasuCalc consolidates error values into four clear indicators:
+
+| Indicator | Meaning and conditions |
 |---|---|
-| Formula prefix | `@SUM(A1..A10)`; leading `+` is also a formula |
-| Ranges | `A1..B10` (`A1:B10` also OK) |
-| Logical ops | `#AND#` / `#OR#` / `#NOT#` |
-| Aliases | `AVG`=`AVERAGE`, `PAYMT`=`PMT`, `LENGTH`=`LEN`, `REPEAT`=`REPT`, `MULTIPLY`=`PRODUCT`, `STD`=`STDEV.P`, `STRING` (Lotus stringify) |
-| Format | Scientific `(S2)` is an alias of `(E2)` |
-| Errors | Generic `ERR`, missing `NA`, circular `CIRCULAR REF` — **not** split into Excel `#VALUE!` / `#NUM!` / `#DIV/0!` |
-| `FIND` / `SEARCH` miss | `NA` (Excel: `#VALUE!`). `ISERR` excludes NA |
-| `ERR()` / `NA()` | Explicitly return those errors |
+| `ERR` | General computation error (division by zero, invalid argument types, domain errors). Can be explicitly generated with `ERR()`. |
+| `NA` | Missing or not found value (lookup misses in `VLOOKUP`, `MATCH`, etc., or the `NA()` function). |
+| `CIRCULAR REF` | Circular dependency detected among cells. |
+| `#REF!` | Invalid reference resulting from row/column or worksheet deletion. |
 
-#### Excel / OpenFormula-style notation (accepted; not a compatibility product)
+*Note*: `FIND` and `SEARCH` return `NA` when substrings are not found, and `ISERR` excludes `NA`.
 
-Familiar syntax is accepted; implemented functions aim for nearby results. **“Same as Excel” is not a contract.**
+#### 4. HasuCalc-specific characteristics
 
-| Topic | HasuCalc behavior |
-|---|---|
-| Prefix | `=` |
-| Ranges | `A1:B10`, whole column `A:A`, sheet `Sheet2!A1`, quoted `'Q1-2024'!A1` when needed |
-| Unary minus vs `^` | `-2^2` = `(-2)^2` = **4** (use `-(2^2)` for `-4`) |
-| Booleans | `TRUE` / `FALSE` / `TRUE()` / `FALSE()`; numeric context 1 / 0 |
-| `SUMIF` 3rd arg | Expanded from the top-left to match criteria shape |
-| Date serials / major functions | Near Excel for implemented cases (`TIME` 24h wrap, US `DAYS360` end-of-month rules, etc.) |
-| Grid | `A`–`XFD`, rows to `1048576` |
-| UX | Selection, `Ctrl+C/X/V/Z/Y`, freeze panes, named ranges |
+* **Storage formats**: Compact uncompressed JSON (`.hwk`) and transparent gzip (`.hwkz`), optimized for `git diff` and LLM/agent processing.
+* **Chart subsystem**: One configurable chart per sheet (series A–F), featuring instant terminal preview and 1280×720 HD PNG export (§3.9).
+* **Flexible currency symbols**: Arbitrary prefix strings (e.g. `$`, `¥`, `€`, `£`, `USD `) configurable per cell (§3.1).
+* **Percent syntax**: `%` is interpreted as a percentage only directly after a numeric literal (e.g. `50%` → 0.5); `=A1%` is not accepted.
+* **Markup ingestion**: Convenience bridges to extract tables into cells and plain text into column-A labels from Markdown (`.md`) and HTML (`.html`) files (§3.10).
 
-Excel function names are canonical; Lotus aliases are accepted only.
+#### 5. Deliberately out of scope
 
-#### HasuCalc-specific (do not match other apps)
-
-* **Native formats** `.hwk` (JSON) and `.hwkz` (gzip); prefer Git/LLM readability.
-* **Charts**: one per sheet, series A–F; terminal draw + PNG (1280×720). **No XLSX/ODS chart I/O** (§3.9).
-* Label alignment: `'` left, `"` right, `^` center; fill with `\`.
-* Currency: **any** per-cell prefix string (no whitelist: `$` / `¥` / `€` / `£` / `USD `, …). Empty → `$`. No suffix currencies or locale grouping like `1.234,56`.
-* Whole-column / huge ranges are clipped to the **used range**.
-* TUI (tcell), slash menus, `Ctrl+K` palette, Markdown table export.
-* **Markdown / HTML import** (convenience bridge): GFM pipe tables and HTML `<table>` become grid cells; other document text becomes column-A labels (§3.10).
-* `%` is a percent **only immediately after a numeric literal** (`50%` → 0.5). `=A1%` is not accepted as a formula.
-* In MANUAL recalc, insert/delete updates formula text but display values wait for the next recalc.
-
-#### Out of scope (missing features are not bugs)
-
-* VBA / macros, pivots, conditional formatting, merged cells, comments, data validation.
-* Dynamic arrays / spill, legacy array formulas `{=...}`.
-* Excel / ODS charts, shapes, slicers.
-* Full Excel error taxonomy (1:1 `#VALUE!` ↔ `ERR`, etc.).
-* Known desktop Excel quirks that contradict documented OpenFormula precedence (e.g. some `-2^2` environments). HasuCalc follows OpenFormula document precedence.
-* Unlisted Excel functions, and full arg / locale / date-system coverage of listed ones.
-* Full multilingual typography in the grid TUI (PNG path is primary; §5).
-
-If an audit finds “different from Excel,” do **not** change behavior when it falls under Lotus / HasuCalc-specific / out-of-scope above. Fix only when a **core guarantee** breaks.
+To preserve speed, simplicity, and terminal focus, the following features are not part of HasuCalc:
+* Script/macro execution (e.g. VBA)
+* Pivot tables, slicers, conditional formatting, merged cells, cell comments, data validation
+* Dynamic array formulas and spill ranges
+* External format charts, shapes, or non-tabular objects in `.xlsx` / `.ods`
 
 ---
 
@@ -166,7 +153,7 @@ hasucalc/
   * Percent: `(P1)` → `12.3%`
   * Fixed: `(F2)` → `12.34`
   * Thousands: `(,)` → `1,234,567`
-  * Scientific: `(E2)` → `1.23E+04` (Lotus alias `(S2)`)
+  * Scientific: `(E2)` → `1.23E+04` (alias `(S2)`)
   * Date: `(D1)`–`(D5)` → e.g. `2026/08/27`, `27-Aug-06`, …
 * **Multi-sheet workbooks**:
   * Multiple worksheets per file.
@@ -182,11 +169,11 @@ hasucalc/
 
 ### 3.2 Formula engine
 
-Both Excel-style and Lotus-style input are accepted (the former is convenience notation, not Excel-product status). Precedence, errors, and aliases follow [§1.4](#14-spec-contract-bugs-vs-intentional-differences). Exact Excel parity is not contracted.
+Supports standard `=` formulas as well as classic `@` function syntax and `+` expressions. Operator precedence, error reporting, and aliases follow [§1.4](#14-specification-policy-and-core-guarantees).
 
-* **Prefixes**: `=` (common), `@` (function), `+` (classic).
-* **Ranges**: `:` (e.g. `A1:B10`, `A1 : B10`) and `..` (e.g. `A1..B10`).
-* **Power & unary minus**: Unary minus binds tighter than `^` (OpenFormula / Excel documented precedence). `-2^2` = `(-2)^2` = `4`. Write `-(2^2)` for `-4`.
+* **Prefixes**: `=` (standard formula), `@` (function syntax), `+` (classic formula).
+* **Ranges**: `:` (e.g. `A1:B10`) and `..` (e.g. `A1..B10`).
+* **Power & unary minus**: Unary minus binds tighter than `^` (`-2^2` = `(-2)^2` = `4`; write `-(2^2)` for `-4`).
 * **Functions (70+)**:
   * **Math / stats**: `SUM`, `AVERAGE`, `COUNT`, `COUNTA`, `COUNTIF`, `SUMIF`, `MAX`, `MIN`, `ROUND`, `ROUNDUP`, `ROUNDDOWN`, `ABS`, `INT`, `MOD`, `SQRT`, `POWER`, `EXP`, `LN`, `LOG`, `LOG10`, `MEDIAN`, `STDEV`, `VAR`
   * **Trig**: `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, `PI`, `DEGREES`, `RADIANS`
@@ -243,7 +230,7 @@ Both Excel-style and Lotus-style input are accepted (the former is convenience n
 
 ### 3.5 Slash menus (/)
 
-Ribbon-inspired hierarchy; also reachable from the `Ctrl+K` palette.
+Logically organized hierarchical menus; also accessible via the `Ctrl+K` command palette.
 
 * **`/F` (File)**: `/FN` New, `/FO` Open, `/FS` Save, `/FX` Export (CSV/Excel/ODS/Markdown × Sheet/Range), `/FQ` Quit
 * **`/H` (Home)**: Undo/Redo, Cut/Copy/Paste, Paste-Special (Values/Link/Transpose), Clear, Find/Next/Prev/Replace/Find-All, Goto, Number formats, Align, Cells (insert/delete/width)
@@ -295,7 +282,7 @@ Ribbon-inspired hierarchy; also reachable from the `Ctrl+K` palette.
 #### Persistence
 * Series / type / title live in sheet `GraphConfig` and are saved **only in `.hwk` / `.hwkz`**.
 * Portable images are **PNG only**.
-* **No chart I/O for `.xlsx` / `.ods`.** HasuCalc’s one-chart-per-sheet A–F model does not map 1:1 to Excel/LibreOffice charts; half-broken chart copy would look worse than none. Tabular data only; chart parts are ignored on read and omitted on write.
+* **External format (`.xlsx` / `.ods`) policy**: HasuCalc's charting system uses a specialized model (one chart per sheet, series A–F, terminal view + HD PNG export). When reading or writing external spreadsheet files, only tabular data (cells, formulas, names) is exchanged; chart components are omitted on write and skipped on read. For sharing or exporting visualizations, use PNG export (§3.9.2).
 
 ---
 
@@ -334,11 +321,11 @@ Slim JSON without gzip:
 
 #### 3. External formats
 
-Authoritative storage is `.hwk` / `.hwkz`. The following are **tabular interchange** only—not a claim that HasuCalc replaces those apps.
+The authoritative formats are `.hwk` / `.hwkz`. The following external formats are supported for **tabular data interoperability**:
 
-* **Excel (`.xlsx`)**: multi-sheet cells/formulas/names, etc. **No charts** (§3.9). Not “Excel compatible.”
-* **LibreOffice (`.ods`)**: tabular multi-sheet I/O. **No charts** (§3.9).
-* **CSV (`.csv`)**: writes **UTF-8 BOM** (`0xEF, 0xBB, 0xBF`) to reduce mojibake in other apps.
+* **Excel workbooks (`.xlsx`)**: multi-sheet cells, formulas, named ranges, and table structure (charts are excluded; see §3.9).
+* **LibreOffice Calc (`.ods`)**: multi-sheet tabular data (charts are excluded; see §3.9).
+* **CSV (`.csv`)**: includes **UTF-8 BOM** (`0xEF, 0xBB, 0xBF`) to ensure clean character rendering across spreadsheet applications.
 * **Markdown (`.md` / `.markdown`)**:
   * **Export**: GFM pipe table from the sheet or a range (`/FX` → Markdown).
   * **Import** (CLI path or Open dialog): GFM `| ... |` tables become multi-column cells (separator rows like `|---|` are skipped). Non-table lines (headings, paragraphs, fenced code lines, etc.) become **labels in column A**. Prose is forced to LABEL so text that looks like `=SUM(...)` is not evaluated. Inline emphasis/links are simplified to plain text. Not a full CommonMark/GFM engine.
@@ -389,7 +376,7 @@ Opening `.md` / `.html` replaces the current workbook with a single imported she
 
 ## 5. Testing & QA
 
-HasuCalc 2.0 pins regressions in `engine_test.go`, `mega_test.go`, and `bugfix_regression_test.go`. Tests enforce the [§1.4](#14-spec-contract-bugs-vs-intentional-differences) contract—not full Excel coverage.
+HasuCalc 2.0 ensures quality and prevents regressions through test suites in `engine_test.go`, `mega_test.go`, and `bugfix_regression_test.go`. Tests verify compliance with the [§1.4](#14-specification-policy-and-core-guarantees) specification.
 
 1. Formula & function evaluation (errors, cross-sheet).
 2. Recalc & circular refs; used-range limits for whole-column refs.

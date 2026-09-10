@@ -3,7 +3,7 @@
 > **Languages:** English (canonical) · [日本語](USER_MANUAL.ja.md)  
 > Overview / quick start: [README.md](README.md) · Engineering spec: [SPECIFICATION.md](SPECIFICATION.md)
 
-This manual explains the on-screen UI, status indicators such as `[READY]`, editing modes, files, and every built-in function with parameters. HasuCalc is **not** an Excel-compatible product; `.hwk` / `.hwkz` are authoritative. `=` formulas and `.xlsx` / `.ods` / `.md` / `.html` bridges exist for convenience.
+This manual explains the on-screen UI, status indicators such as `[READY]`, editing modes, supported file formats, and the syntax and parameters of every built-in function. HasuCalc uses `.hwk` / `.hwkz` as its authoritative native formats, while offering import/export bridges for `.xlsx` / `.ods` / `.csv` / `.md` / `.html`.
 
 ---
 
@@ -51,7 +51,7 @@ The top-right box shows the current interaction mode:
 | **`[POINT]`** | While writing a formula, you pointed at cells/ranges with the cursor (or mouse) to insert references. |
 | **`[MENU]`** | Slash menu (`/`) is open. |
 | **`[PROMPT]`** | Waiting for typed input to a prompt (find, goto, format symbol, …). |
-| **`[END]`** | Lotus-style End mode: press End, then an arrow, to jump to the edge of the current data block. |
+| **`[END]`** | End mode: press End, then an arrow key, to jump to the edge of the current data block. |
 
 ---
 
@@ -81,13 +81,13 @@ The top-right box shows the current interaction mode:
 
 ### Formula tips
 
-- Both `=SUM(A1:B10)` and `@SUM(A1..B10)` work; Excel-style `=` is for convenience, not compatibility.
-- Ranges: `A1:B10` or `A1..B10`; whole column `A:A` is limited to the used range.
-- Cross-sheet: `Sheet2!A1` or `'Q1-2024'!A1`.
-- Absolute / mixed: `$A$1`, `$A1`, `A$1`.
+- Supports standard `=SUM(A1:B10)` formulas as well as classic `@SUM(A1..B10)` and `+` expressions.
+- Ranges: both colon (`A1:B10`) and double-dot (`A1..B10`) syntax; whole-column references like `A:A` are automatically clipped to the used range.
+- Cross-sheet references: `Sheet2!A1`, or `'Q1-2024'!A1` when spaces or symbols are used.
+- Absolute and mixed references: `$A$1`, `$A1`, `A$1`.
 - Booleans: `TRUE` / `FALSE` (and `TRUE()` / `FALSE()`).
-- Lotus logicals: `#AND#`, `#OR#`, `#NOT#`.
-- Unary minus binds tighter than `^`: `-2^2` → `4`.
+- Logical operators: inline `#AND#`, `#OR#`, `#NOT#` (e.g. `+A1>10#AND#B1<20`).
+- Unary minus binds tighter than `^`: `-2^2` → `(-2)^2` = `4` (write `-(2^2)` for `-4`).
 
 Open the function browser with **`/IF`** (Insert → Function) or the palette.
 
@@ -173,7 +173,7 @@ Open via CLI (`hasucalc file.md`) or **Ctrl+O** (lists `.md` / `.html` among oth
 
 - One chart configuration per sheet (series A–F): Line, Bar, Stacked, Pie.
 - **F10** full-screen terminal preview; **S** writes a 1280×720 PNG.
-- Chart settings persist in `.hwk` / `.hwkz` only — not in Excel/ODS.
+- Chart settings persist in `.hwk` / `.hwkz` (external `.xlsx` / `.ods` exports contain tabular data only).
 
 ---
 
@@ -393,7 +393,7 @@ Functions accept either `@NAME(...)` or `NAME(...)` after `=`.
 | `PAYMT` | `PMT` |
 | `MULTIPLY` | `PRODUCT` |
 | `STD` | `STDEV.P` / `STDEVP` |
-| `STRING` | Lotus-style number→text |
+| `STRING` | Number to fixed-decimal text (compatibility) |
 | `CONCATENATE` | `CONCAT` (also listed) |
 
 ---
@@ -402,11 +402,11 @@ Functions accept either `@NAME(...)` or `NAME(...)` after `=`.
 
 | Display | Meaning |
 |:---|:---|
-| `ERR` | Generic formula / value error (HasuCalc does not split Excel `#VALUE!` / `#DIV/0!` / …). |
-| `NA` | Missing / not found (e.g. failed lookup, `NA()`). |
+| `ERR` | Generic formula or computation error (division by zero, type mismatch, etc.). |
+| `NA` | Missing or not found (e.g. failed lookup, `NA()`). |
 | `CIRCULAR REF` | Circular reference detected. |
-| `#REF!` | Broken reference (deleted sheet/range). |
+| `#REF!` | Broken reference (e.g. deleted sheet or range). |
 | Status “Clipboard is empty!” | Paste with nothing copied. |
 | Status “Imported markup from …” | `.md` / `.html` opened successfully. |
 
-For engineering contracts (what is a bug vs intentional Excel difference), see [SPECIFICATION.md](SPECIFICATION.md) §1.4.
+For engineering specifications and core behavioral guarantees, see [SPECIFICATION.md](SPECIFICATION.md) §1.4.
