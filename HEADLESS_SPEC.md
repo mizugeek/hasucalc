@@ -397,6 +397,39 @@ If any operation fails (e.g. invalid syntax, missing sheet, out-of-bounds error)
 
 ---
 
+### 3.8 `hasucalc mcp`
+Launches the built-in **Model Context Protocol (MCP)** server over standard input/output (`stdio`), enabling AI agents and agentic development environments (Claude Desktop, Cursor, Gemini CLI, Antigravity) to connect natively.
+
+```
+Usage:
+  hasucalc mcp [flags]
+```
+
+#### Framing & Transport
+- **Transport**: Standard I/O (`stdio`).
+- **Framing**: JSON-RPC 2.0 messages serialized as single lines separated by `\n`.
+- **Stream Rules**: `stdout` is strictly reserved for JSON-RPC messages; diagnostic logs and warnings are sent to `stderr`.
+
+#### Supported Protocol Methods
+| Method | Description |
+|:---|:---|
+| `initialize` | Negotiates protocol version (`2024-11-05`), server capabilities (`tools: {}`), and server info (`hasucalc`). |
+| `notifications/initialized` | Client readiness signal (no response required). |
+| `ping` | Liveness check (returns empty object `{}`). |
+| `tools/list` | Enumerates available tools with input JSON Schemas. |
+| `tools/call` | Executes a named tool with specified arguments and returns content blocks. |
+
+#### Exposed MCP Tools
+1. **`read_sheet`**: Extracts tabular cell data in sparse JSON, Markdown table, CSV, or raw values (`hasucalc get` equivalent).
+2. **`get_info`**: Inspects structural metadata, sheet list, dimensions, and freeze panes (`hasucalc info` equivalent).
+3. **`evaluate_formula`**: Evaluates standalone formulas or in-context sheet formulas (`hasucalc eval` equivalent).
+4. **`edit_cell`**: Mutates a cell or range with value, formula, or format, with atomic persistence and dry-run (`hasucalc set` equivalent).
+5. **`batch_edit`**: Executes a transactional sequence of mutations with rollback guarantee (`hasucalc batch` equivalent).
+6. **`render_chart`**: Generates a 1280×720 HD PNG chart without GUI (`hasucalc chart` equivalent).
+7. **`convert_file`**: Converts files across supported formats (`hasucalc convert` equivalent).
+
+---
+
 ## 4. Shared JSON Schema Specifications
 
 ### 4.1 Meta Object Schema
@@ -451,7 +484,7 @@ If any operation fails (e.g. invalid syntax, missing sheet, out-of-bounds error)
 | Phase | Deliverables | Interface |
 |:---|:---|:---|
 | **Phase 1** (Completed) | `convert`, `info`, `get`, `eval`, `chart` + stdin/stdout pipes | CLI binary (`hasucalc <subcommand>`) |
-| **Phase 2** (Implemented) | `set` (single/multi-cell update), `batch` (JSON transactional actions) | CLI binary (`hasucalc set`, `hasucalc batch`) |
-| **Phase 3** (Planned) | Built-in MCP Server (Model Context Protocol) wrapping Phase 1 & 2 1:1 | Stdio protocol (`hasucalc mcp`) |
+| **Phase 2** (Completed) | `set` (single/multi-cell update), `batch` (JSON transactional actions) | CLI binary (`hasucalc set`, `hasucalc batch`) |
+| **Phase 3** (Implemented) | Built-in MCP Server (Model Context Protocol) wrapping Phase 1 & 2 1:1 | Stdio protocol (`hasucalc mcp`) |
 
-By establishing this rigorous specification in Phase 1, HasuCalc guarantees that Phase 3 MCP tools (`read_sheet`, `evaluate_formula`, `convert_file`, `render_chart`) will map directly to the proven Go headless functions with zero structural divergence.
+By establishing this rigorous specification in Phase 1 & 2, HasuCalc's Phase 3 MCP tools (`read_sheet`, `get_info`, `evaluate_formula`, `edit_cell`, `batch_edit`, `render_chart`, `convert_file`) map directly to the proven Go headless core functions as a robust native stdio server.

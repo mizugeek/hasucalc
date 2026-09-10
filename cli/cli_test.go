@@ -3,6 +3,7 @@ package cli_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"image/png"
 	"io"
 	"os"
@@ -498,7 +499,7 @@ func TestChart_MissingOutputFlag(t *testing.T) {
 // ------------------- Dispatcher & Help Tests -------------------
 
 func TestDispatcher_SubcommandDetection(t *testing.T) {
-	valid := []string{"convert", "info", "get", "eval", "chart", "set", "batch", "help"}
+	valid := []string{"convert", "info", "get", "eval", "chart", "set", "batch", "mcp", "help"}
 	for _, v := range valid {
 		if !cli.IsSubcommand(v) {
 			t.Errorf("expected %s to be recognized as subcommand", v)
@@ -745,6 +746,212 @@ func TestBatch_DryRun(t *testing.T) {
 	afterContent, _ := os.ReadFile(hwkPath)
 	if !bytes.Equal(beforeContent, afterContent) {
 		t.Errorf("batch dry-run modified disk file!")
+	}
+}
+
+// ------------------- MCP Server Tests (Phase 3) -------------------
+
+func sendMCPRequest(t *testing.T, reqStr string) map[string]any {
+	t.Helper()
+	var inBuf bytes.Buffer
+	inBuf.WriteString(reqStr)
+	if !strings.HasSuffix(reqStr, "\n") {
+		inBuf.WriteString("\n")
+	}
+	var outBuf bytes.Buffer
+
+	if err := cli.ServeMCP(&inBuf, &outBuf); err != nil && err != io.EOF {
+		t.Fatalf("ServeMCP error: %v", err)
+	}
+
+	var resp map[string]any
+	if err := json.Unmarshal(outBuf.Bytes(), &resp); err != nil {
+		t.Fatalf("invalid json-rpc response: %v\nOutput: %s", err, outBuf.String())
+	}
+	return resp
+}
+
+func TestMCP_Initialize(t *testing.T) {
+	resp := sendMCPRequest(t, `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05"}}`)
+	if resp["jsonrpc"] != "2.0" {
+		t.Errorf("expected jsonrpc 2.0, got %v", resp["jsonrpc"])
+	}
+	result, ok := resp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result object, got %v", resp["result"])
+	}
+	if result["protocolVersion"] != "2024-11-05" {
+		t.Errorf("unexpected protocolVersion: %v", result["protocolVersion"])
+	}
+	serverInfo, ok := result["serverInfo"].(map[string]any)
+	if !ok || serverInfo["name"] != "hasucalc" {
+		t.Errorf("unexpected serverInfo: %v", serverInfo)
+	}
+}
+
+func TestMCP_Ping(t *testing.T) {
+	resp := sendMCPRequest(t, `{"jsonrpc":"2.0","id":2,"method":"ping"}`)
+	if resp["id"].(float64) != 2 {
+		t.Errorf("expected id 2, got %v", resp["id"])
+	}
+	if resp["result"] == nil {
+		t.Errorf("expected non-nil result object")
+	}
+}
+
+func TestMCP_ToolsList(t *testing.T) {
+	resp := sendMCPRequest(t, `{"jsonrpc":"2.0","id":3,"method":"tools/list"}`)
+	result, ok := resp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result object, got %v", resp["result"])
+	}
+	tools, ok := result["tools"].([]any)
+	if !ok || len(tools) != 7 {
+		t.Fatalf("expected 7 tools, got %d", len(tools))
+	}
+	toolNames := make(map[string]bool)
+	for _, ti := range tools {
+		tObj := ti.(map[string]any)
+		toolNames[tObj["name"].(string)] = true
+	}
+	expectedTools := []string{
+		"read_sheet", "get_info", "evaluate_formula",
+		"edit_cell", "batch_edit", "render_chart", "convert_file",
+	}
+	for _, expected := range expectedTools {
+		if !toolNames[expected] {
+			t.Errorf("missing tool definition: %s", expected)
+		}
+	}
+}
+
+func TestMCP_CallReadSheet(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+
+	// Test read_sheet JSON
+	reqJSON := fmt.Sprintf(`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"read_sheet","arguments":{"file":"%s","sheet":"Sales","range":"A1:B2"}}}`, hwkPath)
+	resp := sendMCPRequest(t, reqJSON)
+	result := resp["result"].(map[string]any)
+	if result["isError"] == true {
+		t.Fatalf("unexpected tool call error: %v", result)
+	}
+	contentList := result["content"].([]any)
+	text := contentList[0].(map[string]any)["text"].(string)
+	if !strings.Contains(text, "Region") || !strings.Contains(text, "Sales") {
+		t.Errorf("expected Region and Sales in response, got: %s", text)
+	}
+
+	// Test read_sheet Markdown
+	reqMD := fmt.Sprintf(`{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"read_sheet","arguments":{"file":"%s","sheet":"Sales","format":"markdown"}}}`, hwkPath)
+	respMD := sendMCPRequest(t, reqMD)
+	resultMD := respMD["result"].(map[string]any)
+	textMD := resultMD["content"].([]any)[0].(map[string]any)["text"].(string)
+	if !strings.Contains(textMD, "| Region") {
+		t.Errorf("expected markdown table, got:\n%s", textMD)
+	}
+}
+
+func TestMCP_CallEvaluateFormula(t *testing.T) {
+	// Standalone formula
+	resp := sendMCPRequest(t, `{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"evaluate_formula","arguments":{"formula":"=SUM(10,20,30)*1.1"}}}`)
+	result := resp["result"].(map[string]any)
+	text := result["content"].([]any)[0].(map[string]any)["text"].(string)
+	if !strings.Contains(text, "66") {
+		t.Errorf("expected 66 in eval text, got: %s", text)
+	}
+
+	// Division by zero formula error contract: isError is false, val is "ERR"
+	respErr := sendMCPRequest(t, `{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"evaluate_formula","arguments":{"formula":"=1/0"}}}`)
+	resultErr := respErr["result"].(map[string]any)
+	if resultErr["isError"] == true {
+		t.Errorf("formula computational errors must return isError: false per spec")
+	}
+	textErr := resultErr["content"].([]any)[0].(map[string]any)["text"].(string)
+	if !strings.Contains(textErr, "ERR") {
+		t.Errorf("expected ERR in text, got: %s", textErr)
+	}
+}
+
+func TestMCP_CallEditCell(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+
+	// edit_cell with dry_run
+	reqDry := fmt.Sprintf(`{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"edit_cell","arguments":{"file":"%s","sheet":"Sales","target":"B2","value":"7777","dry_run":true}}}`, hwkPath)
+	respDry := sendMCPRequest(t, reqDry)
+	resDry := respDry["result"].(map[string]any)
+	textDry := resDry["content"].([]any)[0].(map[string]any)["text"].(string)
+	if !strings.Contains(textDry, "7777") || !strings.Contains(textDry, `"dryRun": true`) {
+		t.Errorf("unexpected dry_run text: %s", textDry)
+	}
+
+	// Disk must be unmodified
+	wbAfter, _ := sheet.LoadWorkbookJSON(hwkPath)
+	if wbAfter.GetSheet("Sales").GetCell(1, 1).Value == 7777.0 {
+		t.Errorf("dry_run should not modify disk file")
+	}
+
+	// edit_cell persist
+	reqPersist := fmt.Sprintf(`{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"edit_cell","arguments":{"file":"%s","sheet":"Sales","target":"B2","value":"654"}}}`, hwkPath)
+	respPersist := sendMCPRequest(t, reqPersist)
+	resPersist := respPersist["result"].(map[string]any)
+	if resPersist["isError"] == true {
+		t.Fatalf("edit_cell persist error: %v", resPersist)
+	}
+
+	wbPersisted, _ := sheet.LoadWorkbookJSON(hwkPath)
+	if wbPersisted.GetSheet("Sales").GetCell(1, 1).Value != 654.0 {
+		t.Errorf("expected 654.0 on disk, got %v", wbPersisted.GetSheet("Sales").GetCell(1, 1).Value)
+	}
+}
+
+func TestMCP_CallBatchEdit(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+	beforeBytes, _ := os.ReadFile(hwkPath)
+
+	// Batch edit with failure rollback
+	reqFail := fmt.Sprintf(`{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"batch_edit","arguments":{"file":"%s","actions":[{"op":"set_cell","sheet":"Sales","cell":"B2","value":"99999"},{"op":"set_cell","sheet":"NoSuchSheet","cell":"A1","value":"fail"}]}}}`, hwkPath)
+	respFail := sendMCPRequest(t, reqFail)
+	resFail := respFail["result"].(map[string]any)
+	if resFail["isError"] != true {
+		t.Errorf("expected isError: true on failing batch")
+	}
+	textFail := resFail["content"].([]any)[0].(map[string]any)["text"].(string)
+	if !strings.Contains(textFail, "SHEET_NOT_FOUND") || !strings.Contains(textFail, `"failed_step": 1`) {
+		t.Errorf("unexpected batch failure text: %s", textFail)
+	}
+
+	// Disk must be unmodified
+	afterBytes, _ := os.ReadFile(hwkPath)
+	if !bytes.Equal(beforeBytes, afterBytes) {
+		t.Errorf("batch rollback failed in MCP: disk file was modified!")
+	}
+}
+
+func TestMCP_CallRenderChart(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+	tmpDir := t.TempDir()
+	outPNG := filepath.Join(tmpDir, "mcp_chart.png")
+
+	reqChart := fmt.Sprintf(`{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"render_chart","arguments":{"file":"%s","output":"%s","sheet":"Sales","type":"BAR"}}}`, hwkPath, outPNG)
+	resp := sendMCPRequest(t, reqChart)
+	res := resp["result"].(map[string]any)
+	if res["isError"] == true {
+		t.Fatalf("render_chart failed: %v", res)
+	}
+
+	if _, err := os.Stat(outPNG); err != nil {
+		t.Errorf("PNG chart was not generated on disk: %v", err)
+	}
+}
+
+func TestMCP_UnknownMethod(t *testing.T) {
+	resp := sendMCPRequest(t, `{"jsonrpc":"2.0","id":99,"method":"random_method"}`)
+	errObj, ok := resp["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected error object, got %v", resp)
+	}
+	if errObj["code"].(float64) != -32601 {
+		t.Errorf("expected code -32601, got %v", errObj["code"])
 	}
 }
 

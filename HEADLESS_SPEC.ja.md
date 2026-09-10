@@ -397,6 +397,39 @@ Flags:
 
 ---
 
+### 3.8 `hasucalc mcp`
+標準入出力（`stdio`）経由で内蔵 **Model Context Protocol (MCP)** サーバーを起動します。Claude Desktop、Cursor、Gemini CLI、Antigravity 等のエージェント実行環境から直接ネイティブ接続可能です。
+
+```
+Usage:
+  hasucalc mcp [flags]
+```
+
+#### 通信規約（Framing & Transport）
+- **トランスポート**: 標準入出力（`stdio`）。
+- **フレーミング**: 改行（`\n`）で区切られた JSON-RPC 2.0 メッセージ。
+- **ストリーム分離**: `stdout` は JSON-RPC メッセージ専用。診断ログや警告は `stderr` に出力。
+
+#### サポートするプロトコルメソッド
+| メソッド | 説明 |
+|:---|:---|
+| `initialize` | プロトコルバージョン（`2024-11-05`）、サーバー機能（`tools: {}`）、およびサーバー情報（`hasucalc`）のネゴシエーション。 |
+| `notifications/initialized` | クライアント側の準備完了シグナル（返信不要）。 |
+| `ping` | 生存確認（空オブジェクト `{}` を返却）。 |
+| `tools/list` | 利用可能な全ツールの定義と入力 JSON Schema を返却。 |
+| `tools/call` | 指定されたツールを引数とともに実行し、コンテンツブロックを返却。 |
+
+#### 公開される 7 つの MCP ツール
+1. **`read_sheet`**: スパースJSON、Markdown表、CSV、生値でシートデータを取得（`hasucalc get` 相当）。
+2. **`get_info`**: ワークブック構造、シート一覧、使用範囲、セル数、グラフ設定を取得（`hasucalc info` 相当）。
+3. **`evaluate_formula`**: 単発計算またはワークブック上での数式計算（`hasucalc eval` 相当）。
+4. **`edit_cell`**: セルまたは範囲の値・数式・書式更新（原子的保存、`dry_run` 対応、`hasucalc set` 相当）。
+5. **`batch_edit`**: トランザクション一括編集（エラー時完全ロールバック保証、`hasucalc batch` 相当）。
+6. **`render_chart`**: ヘッドレスでの 1280×720 HD PNG グラフ画像生成（`hasucalc chart` 相当）。
+7. **`convert_file`**: 各種ファイル形式の相互変換（`hasucalc convert` 相当）。
+
+---
+
 ## 4. 共通 JSON スキーマ仕様
 
 ### 4.1 Meta オブジェクト
@@ -451,7 +484,7 @@ Flags:
 | フェーズ | 提供機能 | インターフェース |
 |:---|:---|:---|
 | **Phase 1** (完了) | `convert`, `info`, `get`, `eval`, `chart` + stdin/stdout pipes | CLI コマンド (`hasucalc <subcommand>`) |
-| **Phase 2** (実装完了) | `set` (単一/複数セルの更新), `batch` (JSON一括アクション実行) | CLI コマンド (`hasucalc set`, `hasucalc batch`) |
-| **Phase 3** (計画) | 内蔵 MCP サーバー (Model Context Protocol: stdio 経由) | Stdio プロトコル (`hasucalc mcp`) |
+| **Phase 2** (完了) | `set` (単一/複数セルの更新), `batch` (JSON一括アクション実行) | CLI コマンド (`hasucalc set`, `hasucalc batch`) |
+| **Phase 3** (実装完了) | 内蔵 MCP サーバー (Model Context Protocol: stdio 経由) | Stdio プロトコル (`hasucalc mcp`) |
 
-Phase 1 でこの厳格な仕様と出力契約を確立することで、Phase 3 の MCP ツール（`read_sheet`, `evaluate_formula`, `convert_file`, `render_chart`）は、CLI と全く同一の Go ヘッドレスコア関数を呼ぶだけの薄いアダプタとして安全・迅速に実装されます。
+Phase 1 & 2 でこの厳格な仕様と出力契約を確立したことにより、Phase 3 の MCP ツール群（`read_sheet`, `get_info`, `evaluate_formula`, `edit_cell`, `batch_edit`, `render_chart`, `convert_file`）は、CLI と全く同一の Go ヘッドレスコア関数を呼ぶ安全・堅牢なネイティブ stdio サーバーとして実現されました。

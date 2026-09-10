@@ -17,6 +17,7 @@ var subcommands = map[string]bool{
 	"chart":   true,
 	"set":     true,
 	"batch":   true,
+	"mcp":     true,
 	"help":    true,
 }
 
@@ -56,6 +57,8 @@ func Run(args []string) int {
 		return RunSet(cmdArgs)
 	case "batch":
 		return RunBatch(cmdArgs)
+	case "mcp":
+		return RunMCP(cmdArgs)
 	case "help":
 		if len(cmdArgs) > 0 {
 			PrintSubcommandHelp(cmdArgs[0])
@@ -87,6 +90,8 @@ func PrintSubcommandHelp(cmd string) {
 		PrintSetHelp()
 	case "batch":
 		PrintBatchHelp()
+	case "mcp":
+		PrintMCPHelp()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown subcommand '%s'\n", cmd)
 		PrintUsage()
@@ -108,6 +113,7 @@ Available Commands:
   chart      Render HD PNG charts from sheet data without terminal screen
   set        Mutate cell values, formulas, or formats with atomic persistence
   batch      Execute transactional mutation actions from JSON script or stdin
+  mcp        Launch the Model Context Protocol (MCP) stdio server
   help       Help about any command
 
 Run 'hasucalc <command> --help' for details on each subcommand.
