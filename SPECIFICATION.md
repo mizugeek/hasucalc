@@ -26,6 +26,7 @@ Official documentation for the modern terminal spreadsheet **HasuCalc 2.0**: arc
    - [3.10 File formats & I/O](#310-file-formats--io)
    - [3.11 File picker & save dialog](#311-file-picker--save-dialog)
    - [3.12 Multilingual typography](#312-multilingual-typography)
+   - [3.13 Headless CLI & AI agent integration](#313-headless-cli--ai-agent-integration)
 4. [Development chronicle](#4-development-chronicle)
 5. [Testing & QA](#5-testing--qa)
 
@@ -354,6 +355,27 @@ Opening `.md` / `.html` replaces the current workbook with a single imported she
 * Simple scripts: Latin, Japanese, Chinese (SC/TC), Korean, Cyrillic, Greek.
 * RTL / cursive joining: Arabic, Urdu, Persian, Hebrew (BiDi + contextual shaping).
 * Complex clusters: Hindi, Bengali, Thai.
+
+---
+
+### 3.13 Headless CLI & AI agent integration
+
+HasuCalc 2.0 provides a deterministic, non-interactive headless interface designed for autonomous AI agents, shell pipelines, and automated processing without opening a terminal TUI screen. Detailed contracts and JSON schemas are specified in [HEADLESS_SPEC.md](HEADLESS_SPEC.md) ([日本語](HEADLESS_SPEC.ja.md)).
+
+* **Dual-mode dispatch**:
+  * Direct file launch (`hasucalc file.hwk`) or `--demo` launches interactive TUI.
+  * Recognized subcommands (`convert`, `info`, `get`, `eval`, `chart`) execute headlessly and terminate immediately.
+* **Stream separation**: Clean `stdout` (data payload only) vs `stderr` (diagnostics/errors).
+* **Deterministic exit codes**: Exit `0` for normal completion (including arithmetic errors like `ERR` or `NA`); Exit `1` for unrecoverable errors (I/O failure, syntax error, missing sheet).
+* **Workbook-first scoping**: All commands scope queries to target sheet (`-s` / `--sheet`) while returning workbook-level metadata (`sheets`, `usedRange`, `recalcMode`).
+* **Sparse JSON output**: Empty cells are omitted to minimize token overhead for LLM contexts.
+* **Subcommands (Phase 1)**:
+  * `convert`: Format conversion (`.xlsx`, `.ods`, `.csv`, `.hwk`, `.md`, `.html`) across files or stdin/stdout streams.
+  * `info`: Structural sheet and workbook metadata inspection (`--json`).
+  * `get`: Cell and range data extraction (`--format json|markdown|csv|values`).
+  * `eval`: Instant formula evaluation (standalone calculator or within workbook context).
+  * `chart`: Headless HD PNG (1280×720) rendering directly from sheet data.
+* **Roadmap**: Phase 2 introduces transactional editing (`set`, `batch`); Phase 3 provides an integrated Model Context Protocol (`mcp`) stdio server.
 
 ---
 

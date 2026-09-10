@@ -2,7 +2,8 @@
 
 > **Languages:** English (canonical) · [日本語](README.ja.md)  
 > **User manual (detailed):** [USER_MANUAL.md](USER_MANUAL.md) ([日本語](USER_MANUAL.ja.md))  
-> Engineering specification: [SPECIFICATION.md](SPECIFICATION.md) ([日本語](SPECIFICATION.ja.md))
+> Engineering specification: [SPECIFICATION.md](SPECIFICATION.md) ([日本語](SPECIFICATION.ja.md))  
+> Headless CLI & AI agents: [HEADLESS_SPEC.md](HEADLESS_SPEC.md) ([日本語](HEADLESS_SPEC.ja.md))
 
 Fast and lightweight terminal spreadsheet combining the clean clarity of a classic DOS / PC-98 interface with modern editing (`Shift`+arrows, `Ctrl+C/V/S`, `Ctrl+K` palette, `=SUM(A1:B10)` formulas).
 

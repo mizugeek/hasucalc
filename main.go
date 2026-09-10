@@ -9,6 +9,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"hasucalc/cell"
+	"hasucalc/cli"
 	"hasucalc/coord"
 	"hasucalc/sheet"
 	"hasucalc/tui"
@@ -126,16 +127,26 @@ func main() {
 
 	if len(os.Args) > 1 {
 		arg := os.Args[1]
+		if cli.IsSubcommand(arg) {
+			os.Exit(cli.Run(os.Args[1:]))
+		}
 		if arg == "--version" || arg == "-v" || arg == "-V" {
 			fmt.Printf("HasuCalc version %s (Go runtime: %s, OS/Arch: %s/%s)\n", Version, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 			os.Exit(0)
 		} else if arg == "--help" || arg == "-h" {
 			fmt.Printf("HasuCalc %s - Modern Terminal Spreadsheet (CLI / TUI)\n\n", Version)
 			fmt.Println("Usage:")
-			fmt.Println("  hasucalc [file]         Open a spreadsheet file (.hwk, .hwkz, .xlsx, .ods, .csv, .md, .html)")
-			fmt.Println("  hasucalc --demo, -d     Launch with preloaded sample traffic & graph demo data")
-			fmt.Println("  hasucalc --version, -v  Print version information and exit")
-			fmt.Println("  hasucalc --help, -h     Show this help message and exit")
+			fmt.Println("  hasucalc [file]                 Open a spreadsheet file (.hwk, .hwkz, .xlsx, .ods, .csv, .md, .html)")
+			fmt.Println("  hasucalc <subcommand> [flags]   Run headless command (convert, info, get, eval, chart)")
+			fmt.Println("  hasucalc --demo, -d             Launch with preloaded sample traffic & graph demo data")
+			fmt.Println("  hasucalc --version, -v          Print version information and exit")
+			fmt.Println("  hasucalc --help, -h             Show this help message and exit")
+			fmt.Println("\nHeadless Subcommands:")
+			fmt.Println("  convert    Convert tabular data between formats (file-to-file or pipeline)")
+			fmt.Println("  info       Extract structural and sheet metadata from a workbook")
+			fmt.Println("  get        Extract cell data (sparse JSON, Markdown tables, CSV, or values)")
+			fmt.Println("  eval       Evaluate formulas immediately (standalone or in workbook context)")
+			fmt.Println("  chart      Render HD PNG charts from sheet data without terminal screen")
 			os.Exit(0)
 		} else if arg == "--demo" || arg == "-d" {
 			sh = createDemoSheet()
