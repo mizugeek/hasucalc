@@ -37,3 +37,4 @@ Thumbs.db
 
 # Local fixtures / scratch (never publish; may contain personal files)
 /testdata/
+/tmp_mcp_test/

@@ -40,17 +40,18 @@ Official documentation for the modern terminal spreadsheet **HasuCalc 2.0**: arc
 **Design independence and data interoperability**: HasuCalc is an independent terminal spreadsheet application whose authoritative model and native formats are `.hwk` / `.hwkz`. Support for external formats like `.xlsx` and `.ods` serves as a bridge for exchanging tabular data, not as a clone or replica of other software.
 
 ### 1.2 Core design principles
-1. **Modern editing + retro TUI**: Keep PC-98 / DOS clarity and speed while adding familiar selection, `Ctrl+C/X/V/Z/Y`, a VS Code-like `Ctrl+K` palette, and native mouse support.
+1. **Modern editing + retro TUI**: Keep classic DOS clarity and speed while adding familiar selection, `Ctrl+C/X/V/Z/Y`, a VS Code-like `Ctrl+K` palette, and native mouse support.
 2. **Sparse-matrix scale**: Up to **1,048,576 × 16,384 (`A`–`XFD`)** while allocating only for used cells.
 3. **LLM- and Git-friendly storage**: Default `.hwk` is compact uncompressed JSON—readable by `cat`, `grep`, `jq`, Python, and agents; `git diff` can track cell changes line-by-line.
 4. **Self-contained image output**: HD PNG (1280×720) via Go graphics and system fonts (TrueType/OpenType)—no ImageMagick / gnuplot.
 
 ### 1.3 CLI options
 ```bash
-hasucalc [file]         # Open .hwk, .hwkz, .xlsx, .ods, .csv, .md, .html
-hasucalc --demo, -d     # Demo sheet with chart settings
-hasucalc --version, -v  # Version (HasuCalc 2.0.2, Go runtime, OS/Arch)
-hasucalc --help, -h     # Help
+hasucalc [file]                 # Open .hwk, .hwkz, .xlsx, .ods, .csv, .md, .html
+hasucalc <subcommand> [flags]   # Run headless command (convert, info, get, eval, chart, set, batch, mcp)
+hasucalc --demo, -d             # Demo sheet with chart settings
+hasucalc --version, -v          # Version (HasuCalc 2.0.2, Go runtime, OS/Arch)
+hasucalc --help, -h             # Help
 ```
 
 ### 1.4 Specification policy and core guarantees
@@ -360,22 +361,26 @@ Opening `.md` / `.html` replaces the current workbook with a single imported she
 
 ### 3.13 Headless CLI & AI agent integration
 
-HasuCalc 2.0 provides a deterministic, non-interactive headless interface designed for autonomous AI agents, shell pipelines, and automated processing without opening a terminal TUI screen. Detailed contracts and JSON schemas are specified in [HEADLESS_SPEC.md](HEADLESS_SPEC.md) ([日本語](HEADLESS_SPEC.ja.md)).
+HasuCalc 2.0 provides a deterministic, non-interactive headless interface and built-in MCP server designed for autonomous AI agents, shell pipelines, and automated processing without opening a terminal TUI screen. Detailed contracts and JSON schemas are specified in [HEADLESS_SPEC.md](HEADLESS_SPEC.md) ([日本語](HEADLESS_SPEC.ja.md)).
 
 * **Dual-mode dispatch**:
   * Direct file launch (`hasucalc file.hwk`) or `--demo` launches interactive TUI.
-  * Recognized subcommands (`convert`, `info`, `get`, `eval`, `chart`) execute headlessly and terminate immediately.
+  * Recognized subcommands (`convert`, `info`, `get`, `eval`, `chart`, `set`, `batch`, `mcp`) execute headlessly or launch the MCP server.
 * **Stream separation**: Clean `stdout` (data payload only) vs `stderr` (diagnostics/errors).
 * **Deterministic exit codes**: Exit `0` for normal completion (including arithmetic errors like `ERR` or `NA`); Exit `1` for unrecoverable errors (I/O failure, syntax error, missing sheet).
 * **Workbook-first scoping**: All commands scope queries to target sheet (`-s` / `--sheet`) while returning workbook-level metadata (`sheets`, `usedRange`, `recalcMode`).
 * **Sparse JSON output**: Empty cells are omitted to minimize token overhead for LLM contexts.
-* **Subcommands (Phase 1)**:
+* **Subcommands**:
   * `convert`: Format conversion (`.xlsx`, `.ods`, `.csv`, `.hwk`, `.md`, `.html`) across files or stdin/stdout streams.
   * `info`: Structural sheet and workbook metadata inspection (`--json`).
   * `get`: Cell and range data extraction (`--format json|markdown|csv|values`).
   * `eval`: Instant formula evaluation (standalone calculator or within workbook context).
   * `chart`: Headless HD PNG (1280×720) rendering directly from sheet data.
-* **Roadmap**: Phase 2 introduces transactional editing (`set`, `batch`); Phase 3 provides an integrated Model Context Protocol (`mcp`) stdio server.
+  * `set`: Atomic mutation of cell value, formula, or format with recalculation and dry-run.
+  * `batch`: Transactional mutation script execution with automated rollback on failure.
+  * `mcp`: Launches the Model Context Protocol (MCP) stdio server for AI agents.
+* **Model Context Protocol (MCP) Server**:
+  * Zero-dependency native stdio server offering 7 tools (`read_sheet`, `get_info`, `evaluate_formula`, `edit_cell`, `batch_edit`, `render_chart`, `convert_file`) for AI coding assistants (Claude Desktop, Cursor, Gemini, etc.).
 
 ---
 
@@ -393,6 +398,9 @@ HasuCalc 2.0 provides a deterministic, non-interactive headless interface design
 * **Phase 10**: Goto / find-replace / freeze-pane scroll fixes.
 * **Phase 11**: AutoFill, Data Fill, Paste-Transpose, Range Transpose.
 * **Phase 12**: Menu slimming and Freeze-Panes naming (`/VF`).
+* **Phase 13**: Headless CLI subcommands (Phase 1: `convert`, `info`, `get`, `eval`, `chart`) with strict stream separation.
+* **Phase 14**: Atomic cell mutations and transactional batch pipeline (Phase 2: `set`, `batch`) with automated rollback.
+* **Phase 15**: Model Context Protocol (MCP) native stdio server (Phase 3: `mcp`) with 7 tools for AI agent workflows.
 
 ---
 

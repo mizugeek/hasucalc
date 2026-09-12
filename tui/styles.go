@@ -31,7 +31,7 @@ type Styles struct {
 }
 
 func InitStyles() Styles {
-	// Authentic PC-98 / DOS Lotus 1-2-3 color palette
+	// Authentic classic DOS Lotus 1-2-3 color palette
 	cyanBg := tcell.ColorDarkCyan
 	blackBg := tcell.ColorBlack
 	yellowFg := tcell.ColorYellow

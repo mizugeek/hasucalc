@@ -41,7 +41,7 @@
 
 ### 1.2 コア設計思想
 1. **モダン操作性とレトロTUIの高度な融合**:
-   - PC-98 / DOS時代のクラシックなターミナル画面の視認性と高速レスポンスを継承しつつ、馴染みやすい範囲選択、`Ctrl+C/X/V/Z/Y`、VS Code風の `Ctrl+K` コマンドパレット、ネイティブマウス操作を統合。
+   - DOS時代のクラシックなターミナル画面の視認性と高速レスポンスを継承しつつ、馴染みやすい範囲選択、`Ctrl+C/X/V/Z/Y`、VS Code風の `Ctrl+K` コマンドパレット、ネイティブマウス操作を統合。
 2. **疎行列（Sparse Matrix）ベースの超スケーラブル設計**:
    - 最大 **1,048,576行 × 16,384列 (`A`〜`XFD`)** をサポートしながら、使用しているセルのみメモリを消費するゼロフットプリント設計。
 3. **現代AI（LLM）親和性 & Git親和性の最優先**:
@@ -51,10 +51,11 @@
 
 ### 1.3 CLI コマンドライン起動オプション
 ```bash
-hasucalc [file]         # 表ファイル (.hwk, .hwkz, .xlsx, .ods, .csv, .md, .html) を直接開く
-hasucalc --demo, -d     # サンプルデータ & グラフ設定済みデモ画面で起動
-hasucalc --version, -v  # バージョン情報 (HasuCalc 2.0.2, Go runtime, OS/Arch) を表示
-hasucalc --help, -h     # コマンドラインヘルプを表示
+hasucalc [file]                 # 表ファイル (.hwk, .hwkz, .xlsx, .ods, .csv, .md, .html) を直接開く
+hasucalc <subcommand> [flags]   # ヘッドレスコマンドを実行 (convert, info, get, eval, chart, set, batch, mcp)
+hasucalc --demo, -d             # サンプルデータ & グラフ設定済みデモ画面で起動
+hasucalc --version, -v          # バージョン情報 (HasuCalc 2.0.2, Go runtime, OS/Arch) を表示
+hasucalc --help, -h             # コマンドラインヘルプを表示
 ```
 
 ### 1.4 仕様の基本方針と動作保証範囲
@@ -436,22 +437,26 @@ HasuCalc の正本形式は `.hwk` / `.hwkz` です。以下の外部フォー�
 
 ### 3.13 ヘッドレスCLI & AIエージェント連携仕様
 
-HasuCalc 2.0 は、自律AIエージェント、シェルパイプライン、CI/CDバッチ処理向けに、TUI画面を開くことなく利用できる決定論的なヘッドレスCLIインターフェースを提供します。詳細なストリーム規約およびJSONスキーマは [HEADLESS_SPEC.ja.md](HEADLESS_SPEC.ja.md)（[English](HEADLESS_SPEC.md)）に定義されています。
+HasuCalc 2.0 は、自律AIエージェント、シェルパイプライン、CI/CDバッチ処理向けに、TUI画面を開くことなく利用できる決定論的なヘッドレスCLIインターフェースおよび内蔵MCPサーバーを提供します。詳細なストリーム規約およびJSONスキーマは [HEADLESS_SPEC.ja.md](HEADLESS_SPEC.ja.md)（[English](HEADLESS_SPEC.md)）に定義されています。
 
 * **デュアルモード起動**:
   * ファイル直接指定（`hasucalc file.hwk`）または `--demo` 指定時は、従来通りのフルスクリーンTUIが起動。
-  * 認識されたサブコマンド（`convert`, `info`, `get`, `eval`, `chart`）指定時は、非対話型のヘッドレスCLIとして実行して即座に終了。
+  * 認識されたサブコマンド（`convert`, `info`, `get`, `eval`, `chart`, `set`, `batch`, `mcp`）指定時は、非対話型のヘッドレスCLIまたはMCPサーバーとして実行。
 * **ストリーム分離**: データペイロードのみを出力する `stdout` と、診断・エラーログのみを出力する `stderr` の厳格な分離。
 * **決定論的終了コード**: 正常完了時は Exit `0`（数式評価結果が `ERR` や `NA` の場合も正常な計算結果として Exit `0`）。引数・構文・I/Oエラー時は Exit `1`。
 * **ワークブック第一級モデル**: 常にシート名（`-s` / `--sheet`）とワークブック全体のメタ情報（シート一覧、使用範囲、再計算モード）を紐づけて処理。
 * **スパースJSON出力**: LLMのコンテキストウィンドウを圧迫しないよう、空セルを省略したコンパクトなJSON配列を出力。
-* **提供サブコマンド（Phase 1）**:
+* **提供サブコマンド**:
   * `convert`: ファイル形式相互変換（`.xlsx`, `.ods`, `.csv`, `.hwk`, `.md`, `.html`）および標準入出力（stdin/stdout）パイプライン。
   * `info`: ワークブックおよび各シートの構造・メタデータ取得（`--json`）。
   * `get`: セル・範囲データの抽出（`--format json|markdown|csv|values`）。
   * `eval`: 単発の数式計算（電卓）、またはワークブックコンテキスト上での数式評価。
   * `chart`: ヘッドレスでの 1280×720 HD PNG グラフ画像生成。
-* **ロードマップ**: Phase 2 でセル更新・バッチスクリプト実行（`set`, `batch`）、Phase 3 で Model Context Protocol（`mcp`）内蔵 stdio サーバーを提供。
+  * `set`: セル値・数式・表示書式のアトミックな更新と自動再計算（Dry-run対応）。
+  * `batch`: JSONスクリプトまたは標準入力からのトランザクショナルな一括変更（障害時の完全ロールバック保証）。
+  * `mcp`: AIエージェント向け Model Context Protocol (MCP) stdio サーバーの起動。
+* **Model Context Protocol (MCP) 連携**:
+  * 外部依存なしのネイティブ stdio サーバーとして動作し、AIコーディングアシスタント（Claude Desktop, Cursor, Gemini 等）向けに 7 つのツール（`read_sheet`, `get_info`, `evaluate_formula`, `edit_cell`, `batch_edit`, `render_chart`, `convert_file`）を提供。
 
 ---
 
@@ -478,6 +483,15 @@ HasuCalc 2.0 は、自律AIエージェント、シェルパイプライン、CI
   - `Titles` を直感的な `Freeze-Panes`（当時 `/WF`、現行は `/VF`）に変更。
   - `Edit` メニューを4グループに整理し、`Next` と `Previous` を隣接配置。
   - 重複・冗長なメニュー項目（Line-Single/Double, Format Column-Width, 3段階Sort, Edit-Cell, Select-All, Recalculate, Fill-Down/Right）を削除して洗練。
+* **フェーズ 13: ヘッドレスCLI (Phase 1)**:
+  - TUIを開かずに利用できる非対話型サブコマンド（`convert`, `info`, `get`, `eval`, `chart`）の実装。
+  - `stdout`/`stderr` の厳格なストリーム分離と決定論的終了コード（Exit 0 / 1）の確立。
+* **フェーズ 14: アトミック編集 & トランザクショナルバッチ (Phase 2)**:
+  - 単一セルのアトミック更新（`set`）と、JSON一括操作パイプライン（`batch`）の実装。
+  - エラー発生時の変更前自動ロールバックによるワークブック破損防止機構の統合。
+* **フェーズ 15: Model Context Protocol (MCP) 内蔵 stdio サーバー (Phase 3)**:
+  - ゼロ依存の JSON-RPC 2.0 準拠 stdio サーバー（`mcp`）の実装。
+  - AIエージェント向けに最適化された 7 つのネイティブツール（`read_sheet`, `get_info`, `evaluate_formula`, `edit_cell`, `batch_edit`, `render_chart`, `convert_file`）の提供。
 
 ---
 

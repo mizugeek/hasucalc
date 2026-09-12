@@ -5,7 +5,7 @@
 > Engineering specification: [SPECIFICATION.md](SPECIFICATION.md) ([日本語](SPECIFICATION.ja.md))  
 > Headless CLI & AI agents: [HEADLESS_SPEC.md](HEADLESS_SPEC.md) ([日本語](HEADLESS_SPEC.ja.md))
 
-Fast and lightweight terminal spreadsheet combining the clean clarity of a classic DOS / PC-98 interface with modern editing (`Shift`+arrows, `Ctrl+C/V/S`, `Ctrl+K` palette, `=SUM(A1:B10)` formulas).
+Fast and lightweight terminal spreadsheet combining the clean clarity of a classic DOS interface with modern editing (`Shift`+arrows, `Ctrl+C/V/S`, `Ctrl+K` palette, `=SUM(A1:B10)` formulas).
 
 Uses compact `.hwk` (JSON) and `.hwkz` (gzip) as native, Git- and LLM-friendly file formats, with import/export support for tabular formats (`.xlsx`, `.ods`, `.csv`, `.md`, `.html`).
 

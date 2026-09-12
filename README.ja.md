@@ -5,7 +5,7 @@
 > 技術仕様: [SPECIFICATION.md](SPECIFICATION.md)（[日本語](SPECIFICATION.ja.md)）  
 > ヘッドレスCLI & AIエージェント仕様: [HEADLESS_SPEC.md](HEADLESS_SPEC.md)（[日本語](HEADLESS_SPEC.ja.md)）
 
-DOS / PC-98 風の視認性に優れたTUIと、現代的な操作感（`Shift`+矢印での範囲選択、`Ctrl+C/V/S`、`Ctrl+K` コマンドパレット、`=SUM(A1:B10)` などの数式）を融合した高速・軽量なターミナル表計算ソフトウェアです。
+DOS風の視認性に優れたTUIと、現代的な操作感（`Shift`+矢印での範囲選択、`Ctrl+C/V/S`、`Ctrl+K` コマンドパレット、`=SUM(A1:B10)` などの数式）を融合した高速・軽量なターミナル表計算ソフトウェアです。
 
 標準フォーマットには Git や AI（LLM）と親和性の高い `.hwk`（コンパクトJSON）/ `.hwkz`（gzip）を採用。外部ファイル（`.xlsx`, `.ods`, `.csv`, `.md`, `.html`）とのインポート・エクスポートによるデータ連携にも対応しています。
 
