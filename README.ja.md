@@ -31,7 +31,19 @@ DOS風の視認性に優れたTUIと、現代的な操作感（`Shift`+矢印で
 3. `hasucalc --version` で確認する。
 4. （開発者向け・任意）`CGO_ENABLED=0 go build -o hasucalc .`
 
-未署名の macOS / Windows バイナリは Gatekeeper や SmartScreen の警告が出ることがある。Release を信頼できる場合は実行を許可する。
+### macOS での注意（Gatekeeper）
+
+Release の macOS バイナリは **Apple の署名・公証をしていません**。初回実行時に「"hasucalc" は開いていません」などと拒否されることがあります（壊れているわけではありません）。Release を信頼できる場合は、次のいずれかで実行を許可してください。
+
+1. **Finder:** `hasucalc` を **Control+クリック → 開く**。警告が出たら再度 **開く** を選ぶ。
+2. **ターミナル**（ダウンロード属性を外す）:
+   ```bash
+   xattr -d com.apple.quarantine ./hasucalc
+   ./hasucalc --version
+   ```
+3. **システム設定 → プライバシーとセキュリティ** にブロック表示が出ていれば **このまま開く** を選ぶ。
+
+未署名の Windows バイナリは SmartScreen の警告が出ることがあります。同様に、Release を信頼できる場合は実行を許可してください。
 
 ## ヘッドレスCLI & MCPサーバー（AIエージェント・自動化連携）
 
