@@ -22,6 +22,17 @@ Ships as a single, self-contained, CGO-free Go binary: `hasucalc`.
 
 For screen layout, `[READY]` / `[CALC]` meanings, parameters of every function, menus, and file formats, see the **[User Manual](USER_MANUAL.md)**.
 
+## Install (Releases)
+
+Pre-built archives are on [GitHub Releases](https://github.com/mizugeek/hasucalc/releases/latest).
+
+1. Download the archive for your OS and CPU (Linux: `.tar.gz`; macOS and Windows: `.zip`).
+2. Extract it. On macOS you can double-click the `.zip` in Finder. Put `hasucalc` (or `hasucalc.exe` on Windows) on your `PATH`, or run it by full path. Each archive includes `LICENSE`.
+3. Confirm with `hasucalc --version`.
+4. (Optional, for development) `CGO_ENABLED=0 go build -o hasucalc .`
+
+Unsigned macOS/Windows binaries may trigger Gatekeeper or SmartScreen warnings; allow the binary if you trust the Release.
+
 ## Headless CLI & MCP Server (AI Agents & Automation)
 
 HasuCalc includes a native, zero-dependency headless CLI and a built-in **Model Context Protocol (MCP)** server over `stdio` for LLM agents, CI/CD scripts, and terminal pipelines.

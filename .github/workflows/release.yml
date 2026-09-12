@@ -1,0 +1,159 @@
+# Manual release: read version/version.go → create vX.Y.Z tag → cross-build → GitHub Release.
+# Does not run on every push. Does not bump version automatically.
+name: Release
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      tag: ${{ steps.ver.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version from version/version.go
+        id: ver
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/^const Version = "\([^"]*\)".*/\1/p' version/version.go | head -n1)
+          if [ -z "${VERSION}" ]; then
+            echo "Failed to parse Version from version/version.go" >&2
+            exit 1
+          fi
+          if ! echo "${VERSION}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([.+-].+)?$'; then
+            echo "Refusing non-semver Version: ${VERSION}" >&2
+            exit 1
+          fi
+          TAG="v${VERSION}"
+          {
+            echo "version=${VERSION}"
+            echo "tag=${TAG}"
+          } >> "${GITHUB_OUTPUT}"
+          echo "Parsed version=${VERSION} tag=${TAG}"
+
+      - name: Create and push annotated tag
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on origin; refusing duplicate release" >&2
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "refs/tags/${TAG}"
+
+  build:
+    needs: create-tag
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            archive: tar.gz
+          - goos: linux
+            goarch: arm64
+            archive: tar.gz
+          - goos: darwin
+            goarch: amd64
+            archive: zip
+          - goos: darwin
+            goarch: arm64
+            archive: zip
+          - goos: windows
+            goarch: amd64
+            archive: zip
+          - goos: windows
+            goarch: arm64
+            archive: zip
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.create-tag.outputs.tag }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build and package
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          VERSION: ${{ needs.create-tag.outputs.version }}
+          ARCHIVE: ${{ matrix.archive }}
+        run: |
+          set -euo pipefail
+          BIN=hasucalc
+          if [ "${GOOS}" = "windows" ]; then
+            BIN=hasucalc.exe
+          fi
+          STAGING="$(mktemp -d)"
+          CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "${STAGING}/${BIN}" .
+          cp LICENSE "${STAGING}/LICENSE"
+          ASSET="hasucalc_${VERSION}_${GOOS}_${GOARCH}.${ARCHIVE}"
+          mkdir -p dist
+          if [ "${ARCHIVE}" = "tar.gz" ]; then
+            tar -C "${STAGING}" -czf "dist/${ASSET}" "${BIN}" LICENSE
+          else
+            (cd "${STAGING}" && zip -q "${GITHUB_WORKSPACE}/dist/${ASSET}" "${BIN}" LICENSE)
+          fi
+          echo "Built dist/${ASSET}"
+          tar -tzf "dist/${ASSET}" 2>/dev/null || unzip -l "dist/${ASSET}"
+
+      - name: Upload archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: [create-tag, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download archives
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate SHA256SUMS
+        run: |
+          set -euo pipefail
+          cd artifacts
+          sha256sum -- * > SHA256SUMS
+          echo "--- SHA256SUMS ---"
+          cat SHA256SUMS
+          ls -la
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.create-tag.outputs.tag }}
+          name: HasuCalc ${{ needs.create-tag.outputs.version }}
+          body: |
+            HasuCalc `${{ needs.create-tag.outputs.version }}`
+
+            Pre-built archives for Linux (`.tar.gz`), macOS, and Windows (`.zip`).
+            Each archive contains the binary and `LICENSE`. Verify downloads with `SHA256SUMS`.
+
+            Version source of truth: `version/version.go` (`version.Version`).
+          files: artifacts/*
+          fail_on_unmatched_files: true
