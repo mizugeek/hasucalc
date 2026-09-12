@@ -113,7 +113,11 @@ func (s *Sheet) Name() string {
 }
 
 func (s *Sheet) SetName(name string) {
-	s.name = strings.TrimSpace(name)
+	name = strings.TrimSpace(name)
+	if s.name == name {
+		return
+	}
+	s.name = name
 	s.modified = true
 }
 

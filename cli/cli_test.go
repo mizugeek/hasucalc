@@ -944,6 +944,43 @@ func TestMCP_CallRenderChart(t *testing.T) {
 	}
 }
 
+func TestMCP_CallGetInfo(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+
+	req := fmt.Sprintf(`{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"get_info","arguments":{"file":"%s","sheet":"Sales"}}}`, hwkPath)
+	resp := sendMCPRequest(t, req)
+	res := resp["result"].(map[string]any)
+	if res["isError"] == true {
+		t.Fatalf("get_info failed: %v", res)
+	}
+	contentList := res["content"].([]any)
+	text := contentList[0].(map[string]any)["text"].(string)
+	if !strings.Contains(text, `"command": "info"`) || !strings.Contains(text, `"Sales"`) {
+		t.Errorf("expected info json response, got: %s", text)
+	}
+}
+
+func TestMCP_CallConvertFile(t *testing.T) {
+	_, hwkPath := createTestWorkbook(t)
+	tmpDir := t.TempDir()
+	outCSV := filepath.Join(tmpDir, "converted.csv")
+
+	req := fmt.Sprintf(`{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"convert_file","arguments":{"input":"%s","output":"%s","sheet":"Sales"}}}`, hwkPath, outCSV)
+	resp := sendMCPRequest(t, req)
+	res := resp["result"].(map[string]any)
+	if res["isError"] == true {
+		t.Fatalf("convert_file failed: %v", res)
+	}
+
+	csvBytes, err := os.ReadFile(outCSV)
+	if err != nil {
+		t.Fatalf("failed to read converted csv: %v", err)
+	}
+	if !strings.Contains(string(csvBytes), "Region,Q1") {
+		t.Errorf("unexpected csv output: %s", string(csvBytes))
+	}
+}
+
 func TestMCP_UnknownMethod(t *testing.T) {
 	resp := sendMCPRequest(t, `{"jsonrpc":"2.0","id":99,"method":"random_method"}`)
 	errObj, ok := resp["error"].(map[string]any)

@@ -281,9 +281,6 @@ func LoadWorkbookJSON(filepath string) (*Workbook, error) {
 		}
 		for _, sData := range wbData.Sheets {
 			sh := loadSheetFromData(sData)
-			if sData.Name != "" {
-				sh.SetName(sData.Name)
-			}
 			sh.SetWorkbook(wb)
 			wb.Sheets = append(wb.Sheets, sh)
 		}
@@ -292,6 +289,12 @@ func LoadWorkbookJSON(filepath string) (*Workbook, error) {
 		}
 
 		wb.RecalculateAll()
+		// Loading/recalculating must not look like an unsaved user edit.
+		for _, s := range wb.Sheets {
+			if s != nil {
+				s.SetModified(false)
+			}
+		}
 		return wb, nil
 	}
 
