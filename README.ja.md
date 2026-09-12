@@ -110,3 +110,7 @@ Claude Desktop、Cursor、その他の MCP クライアントの設定ファイ�
 **Financial:** `PMT`, `PV`, `FV`, `NPV`, `IRR`, `RATE`, `NPER`, `SLN`, `SYD`, `DDB`
 
 `AVG`→`AVERAGE` などの別名はマニュアル参照。
+
+## ライセンス
+
+MIT License。詳細は [LICENSE](LICENSE) を参照。

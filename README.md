@@ -110,3 +110,7 @@ Use `=NAME(...)` or `@NAME(...)`. Optional arguments are documented in the [func
 **Financial:** `PMT`, `PV`, `FV`, `NPV`, `IRR`, `RATE`, `NPER`, `SLN`, `SYD`, `DDB`
 
 Aliases such as `AVERAGE`←`AVG`, `LEN`←`LENGTH`, `PMT`←`PAYMT` are accepted; see the manual.
+
+## License
+
+MIT License. See [LICENSE](LICENSE).
