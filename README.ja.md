@@ -22,6 +22,17 @@ DOS風の視認性に優れたTUIと、現代的な操作感（`Shift`+矢印で
 
 画面構成、`[READY]` / `[CALC]` の意味、関数の引数、メニュー、ファイル形式の詳細は **[ユーザーマニュアル](USER_MANUAL.ja.md)** を参照してください。
 
+## インストール（Releases）
+
+事前ビルド済みアーカイブは [GitHub Releases](https://github.com/mizugeek/hasucalc/releases/latest) にあります。
+
+1. OS / CPU 向けのアーカイブを取得する（Linux: `.tar.gz`、macOS / Windows: `.zip`）。
+2. 展開する。macOS では Finder で `.zip` をダブルクリックしてよい。`hasucalc`（Windows は `hasucalc.exe`）を `PATH` 上に置くか、フルパスで実行する。各アーカイブには `LICENSE` も含まれる。
+3. `hasucalc --version` で確認する。
+4. （開発者向け・任意）`CGO_ENABLED=0 go build -o hasucalc .`
+
+未署名の macOS / Windows バイナリは Gatekeeper や SmartScreen の警告が出ることがある。Release を信頼できる場合は実行を許可する。
+
 ## ヘッドレスCLI & MCPサーバー（AIエージェント・自動化連携）
 
 HasuCalc は画面（TUI）を開かずにコマンドラインやパイプラインから直接操作できるヘッドレスCLI、および LLM エージェントと直接通信可能な **Model Context Protocol (MCP)** stdio サーバーを外部依存ゼロで内蔵しています。
@@ -110,3 +121,7 @@ Claude Desktop、Cursor、その他の MCP クライアントの設定ファイ�
 **Financial:** `PMT`, `PV`, `FV`, `NPV`, `IRR`, `RATE`, `NPER`, `SLN`, `SYD`, `DDB`
 
 `AVG`→`AVERAGE` などの別名はマニュアル参照。
+
+## ライセンス
+
+MIT License。詳細は [LICENSE](LICENSE) を参照。
