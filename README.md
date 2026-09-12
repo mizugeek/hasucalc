@@ -31,7 +31,19 @@ Pre-built archives are on [GitHub Releases](https://github.com/mizugeek/hasucalc
 3. Confirm with `hasucalc --version`.
 4. (Optional, for development) `CGO_ENABLED=0 go build -o hasucalc .`
 
-Unsigned macOS/Windows binaries may trigger Gatekeeper or SmartScreen warnings; allow the binary if you trust the Release.
+### macOS notes (Gatekeeper)
+
+macOS Release binaries are **not Apple-signed or notarized**. The first launch may show a dialog such as *“hasucalc” cannot be opened* (the binary is not corrupted). If you trust the Release, allow it with one of:
+
+1. **Finder:** **Control-click** `hasucalc` → **Open**, then **Open** again if prompted.
+2. **Terminal** (clear the download quarantine attribute):
+   ```bash
+   xattr -d com.apple.quarantine ./hasucalc
+   ./hasucalc --version
+   ```
+3. **System Settings → Privacy & Security:** if a block notice appears, choose **Open Anyway**.
+
+Unsigned Windows binaries may trigger SmartScreen; allow the binary if you trust the Release.
 
 ## Headless CLI & MCP Server (AI Agents & Automation)
 
