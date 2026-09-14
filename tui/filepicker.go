@@ -109,6 +109,14 @@ func (fp *FilePicker) EntriesForTest() []FileEntry {
 	return out
 }
 
+func (fp *FilePicker) CurrentDirForTest() string {
+	return fp.currentDir
+}
+
+func (fp *FilePicker) InputBufferForTest() string {
+	return string(fp.inputBuffer)
+}
+
 // isOpenableWorksheetName reports whether Open dialog should list this file.
 func isOpenableWorksheetName(name string) bool {
 	lower := strings.ToLower(name)
@@ -225,6 +233,26 @@ func NormalizeHwkSaveFilename(fn string) string {
 		return base + ".hwk"
 	}
 	return fn + ".hwk"
+}
+
+// AbsolutePath returns an absolute path, or the original string if Abs fails.
+func AbsolutePath(path string) string {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return path
+	}
+	return abs
+}
+
+// SuggestedHwkBeside returns an absolute .hwk path in the same directory as sourcePath.
+// Used after opening/importing non-native files so Save starts in that folder.
+func SuggestedHwkBeside(sourcePath string) string {
+	abs := AbsolutePath(sourcePath)
+	base := strings.TrimSuffix(filepath.Base(abs), filepath.Ext(abs))
+	if base == "" || base == "." {
+		base = "DATA"
+	}
+	return filepath.Join(filepath.Dir(abs), NormalizeHwkSaveFilename(base+".hwk"))
 }
 
 func (fp *FilePicker) Open(mode FilePickerMode, initialPath string) {

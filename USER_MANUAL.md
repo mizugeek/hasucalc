@@ -90,7 +90,7 @@ The top-right box shows the current interaction mode:
 - Logical operators: inline `#AND#`, `#OR#`, `#NOT#` (e.g. `+A1>10#AND#B1<20`).
 - Unary minus binds tighter than `^`: `-2^2` → `(-2)^2` = `4` (write `-(2^2)` for `-4`).
 
-Open the function browser with **`/IF`** (Insert → Function) or the palette.
+Open the function browser with **`/OF`** (Formula → Function) or the palette.
 
 ---
 
@@ -139,14 +139,17 @@ Type `/` then letter keys (or use arrows). Common paths:
 |:---|:---|
 | `/FN` `/FO` `/FS` `/FQ` | New / Open / Save / Quit |
 | `/FX` | Export → CSV / Excel / ODS / Markdown → Sheet or Range |
-| `/HU` `/HR` `/HX` `/HC` `/HV` | Undo / Redo / Cut / Copy / Paste |
-| `/HS` | Paste special (values / link / transpose) |
-| `/HF` `/HE` `/HG` | Find / Replace / Goto |
-| `/HM` | Number formats (currency, %, …) |
-| `/IF` | Function browser |
-| `/OS` / `/O9` | AutoSum / Recalculate |
-| `/DS` `/DA` `/DF` `/DT` | Sort / AutoFill / Fill / Transpose |
-| `/VF` | Freeze panes |
+| `/EHU` `/EHR` | Undo / Redo |
+| `/EC` | Clipboard (Cut / Copy / Paste → All / Values / Link / Transpose) |
+| `/EFF` `/EFE` `/EG` | Find / Replace / Goto |
+| `/MNC` … | Number formats (currency, %, …) |
+| `/RI` `/RD` | Insert / delete row |
+| `/LI` `/LD` `/LWS` | Insert / delete column, set width |
+| `/WA` `/WD` `/WR` | Add / delete / rename sheet |
+| `/OF` | Function browser |
+| `/OAS` / `/O9` | Aggregate Sum / Recalculate |
+| `/DS` `/DFA` `/DFS` `/DT` | Sort / AutoFill / Series fill / Transpose |
+| `/WF` | Freeze panes |
 | `/CV` `/CT` `/CP` | Chart view / type / save PNG |
 | `/?K` | Keybindings help |
 
@@ -164,7 +167,7 @@ Fuzzy search for actions (e.g. `sum`, `currency`, `graph`, `csv export`).
 | **`.hwkz` / `.hwk.gz`** | Same JSON, gzip-compressed. |
 | **`.xlsx` / `.xlsm` / `.ods`** | Tabular import/export bridge (no charts). |
 | **`.csv` / `.tsv`** | Delimited text; CSV export adds UTF-8 BOM. |
-| **`.md` / `.html`** | **Import**: tables → grid; other text → column-A labels. Markdown can also be **exported** as a GFM table. |
+| **`.md` / `.html`** | **Import**: prose → `Document`; all tables stacked on one `Tables` sheet (banner + blank-row separators). Markdown can also be **exported** as a GFM table. |
 
 Open via CLI (`hasucalc file.md`) or **Ctrl+O** (lists `.md` / `.html` among other openable types).
 

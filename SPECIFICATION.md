@@ -50,7 +50,7 @@ Official documentation for the modern terminal spreadsheet **HasuCalc 2.0**: arc
 hasucalc [file]                 # Open .hwk, .hwkz, .xlsx, .ods, .csv, .md, .html
 hasucalc <subcommand> [flags]   # Run headless command (convert, info, get, eval, chart, set, batch, mcp)
 hasucalc --demo, -d             # Demo sheet with chart settings
-hasucalc --version, -v          # Version (HasuCalc 2.0.2, Go runtime, OS/Arch)
+hasucalc --version, -v          # Version (HasuCalc 2.1.0, Go runtime, OS/Arch)
 hasucalc --help, -h             # Help
 ```
 
@@ -235,37 +235,39 @@ Supports standard `=` formulas as well as classic `@` function syntax and `+` ex
 Logically organized hierarchical menus; also accessible via the `Ctrl+K` command palette.
 
 * **`/F` (File)**: `/FN` New, `/FO` Open, `/FS` Save, `/FX` Export (CSV/Excel/ODS/Markdown × Sheet/Range), `/FQ` Quit
-* **`/H` (Home)**: Undo/Redo, Cut/Copy/Paste, Paste-Special (Values/Link/Transpose), Clear, Find/Next/Prev/Replace/Find-All, Goto, Number formats, Align, Cells (insert/delete/width)
-* **`/I` (Insert)**: Function browser, Rows/Columns, Today/Now, Chart (`F10`)
-* **`/O` (Formulas)**: AutoSum, Insert-Function, Average/Count/Max/Min, Recalculate (`F9`)
-* **`/D` (Data)**: Sort, AutoFill, Fill, Transpose, Names
-* **`/V` (View)**: Freeze-Panes, Select/Next/Prev sheet, Add/Delete/Rename
-* **`/C` (Chart)**: View, Type, Title, axes/series, Status, Save-PNG
+* **`/E` (Edit)**: History (Undo/Redo), Clipboard (Cut/Copy/Paste→All/Values/Link/Transpose), Clear, Find (Find/Next/Prev/Replace/All), Goto
+* **`/M` (Format)**: Number formats, Align
+* **`/R` (Row)**: Insert, Delete
+* **`/L` (Column)**: Insert, Delete, Width (Set/Reset/Global)
+* **`/W` (Sheet)**: Add/Delete/Rename, Go (Select/Next/Prev), Freeze-Panes
+* **`/D` (Data)**: Sort, Fill (Auto/Series/Down/Right), Transpose, Names
+* **`/O` (Formula)**: Aggregate (Sum/Average/Count/Max/Min), Function, Date (Today/Now), Recalculate (`F9`)
+* **`/C` (Chart)**: View, Type, Title, X-Axis, Series (A–F), Status, Save-PNG
 * **`/?` (Help)**: About, Keybindings (`F1`), Palette
 
 ---
 
 ### 3.6 Find, replace, goto
 
-* **Goto (`Ctrl+G` / `F5` / `/HG`)**: cell (`B10`), range (`B2..D10`), other sheet (`Sheet2!A1`), named range (`Total`). Viewport scrolls if needed.
-* **Find (`Ctrl+F` / `/HF`) & next/prev**: searches `RawInput`, computed `Value`, and formatted display; wraps around.
-* **Replace (`Ctrl+H` / `/HE`)**: confirm `Y` / skip `N` / all `A` / cancel `Esc`; can replace cells whose *computed* value matches.
-* **Find-All (`/HA`)**: workbook-wide; switches to the sheet that contains the hit.
+* **Goto (`Ctrl+G` / `F5` / `/EG`)**: cell (`B10`), range (`B2..D10`), other sheet (`Sheet2!A1`), named range (`Total`). Viewport scrolls if needed.
+* **Find (`Ctrl+F` / `/EFF`) & next/prev**: searches `RawInput`, computed `Value`, and formatted display; wraps around.
+* **Replace (`Ctrl+H` / `/EFE`)**: confirm `Y` / skip `N` / all `A` / cancel `Esc`; can replace cells whose *computed* value matches.
+* **Find-All (`/EFA`)**: workbook-wide; switches to the sheet that contains the hit.
 
 ---
 
 ### 3.7 Freeze panes
 
-* **`/VF`**: Both `/VFB`, Horizontal `/VFH`, Vertical `/VFV`, Clear `/VFC`.
+* **`/WF`**: Both `/WFB`, Horizontal `/WFH`, Vertical `/WFV`, Clear `/WFC`.
 * Frozen header rows/columns stay painted at the top/left while scrolling.
 
 ---
 
 ### 3.8 AutoFill & transpose
 
-* **AutoFill (`/DA`)**: detect pattern from first (and second) cells — numeric series, flexible date sequences.
-* **Data Fill (`/DF`)**: interactive start / step (`1d`/`1w`/`1m`/`1y`/number) / stop.
-* **Paste-Transpose (`/HST`)**: transpose clipboard with formula retargeting.
+* **AutoFill (`/DFA`)**: detect pattern from first (and second) cells — numeric series, flexible date sequences.
+* **Data Fill (`/DFS`)**: interactive start / step (`1d`/`1w`/`1m`/`1y`/number) / stop.
+* **Paste-Transpose (`/ECVT`)**: transpose clipboard with formula retargeting.
 * **Range Transpose (`/DT`)**: transpose into a destination (clears leftovers on in-place transpose).
 
 ---
@@ -330,11 +332,11 @@ The authoritative formats are `.hwk` / `.hwkz`. The following external formats a
 * **CSV (`.csv`)**: includes **UTF-8 BOM** (`0xEF, 0xBB, 0xBF`) to ensure clean character rendering across spreadsheet applications.
 * **Markdown (`.md` / `.markdown`)**:
   * **Export**: GFM pipe table from the sheet or a range (`/FX` → Markdown).
-  * **Import** (CLI path or Open dialog): GFM `| ... |` tables become multi-column cells (separator rows like `|---|` are skipped). Non-table lines (headings, paragraphs, fenced code lines, etc.) become **labels in column A**. Prose is forced to LABEL so text that looks like `=SUM(...)` is not evaluated. Inline emphasis/links are simplified to plain text. Not a full CommonMark/GFM engine.
+  * **Import** (CLI path or Open dialog): GFM `| ... |` tables are stacked on a single `Tables` sheet. Each table starts with a banner row (`══ heading ══`, from the nearest preceding heading or `Table N`) and tables are separated by a blank row. Non-table lines go on a `Document` sheet as column-A labels, with pointer rows (`→ Tables!A12 (title, N rows)`). Table-only files keep just `Tables`. Column widths are auto-fitted. Separator rows like `|---|` are skipped. Prose is forced to LABEL so text that looks like `=SUM(...)` is not evaluated. Inline emphasis/links are simplified to plain text. Not a full CommonMark/GFM engine.
 * **HTML (`.html` / `.htm`)**:
-  * **Import only** (CLI path or Open dialog): each `<table>` becomes a grid block; block text from headings / paragraphs / list items / etc. becomes column-A labels. Nested markup inside cells is flattened to text. Scripts/styles/comments are ignored. Not a browser HTML engine; malformed or exotic markup may be incomplete.
+  * **Import only** (CLI path or Open dialog): each `<table>` is stacked on a single `Tables` sheet with banner separators (same layout as Markdown import); block text from headings / paragraphs / list items / etc. becomes column-A labels on `Document`. Nested markup inside cells is flattened to text. Scripts/styles/comments are ignored. Not a browser HTML engine; malformed or exotic markup may be incomplete.
 
-Opening `.md` / `.html` replaces the current workbook with a single imported sheet and suggests a `.hwk` save name (same pattern as CSV import).
+Opening `.md` / `.html` replaces the current workbook with `Document` + `Tables` (or just `Tables` when table-only) and suggests a `.hwk` save name (same pattern as CSV import).
 
 ---
 
@@ -397,7 +399,8 @@ HasuCalc 2.0 provides a deterministic, non-interactive headless interface and bu
 * **Phase 9**: Cross-sheet copy/paste with formula shift.
 * **Phase 10**: Goto / find-replace / freeze-pane scroll fixes.
 * **Phase 11**: AutoFill, Data Fill, Paste-Transpose, Range Transpose.
-* **Phase 12**: Menu slimming and Freeze-Panes naming (`/VF`).
+* **Phase 12**: Menu slimming and Freeze-Panes naming (`/VF`; later moved under Sheet as `/WF`).
+* **Phase 13+**: Object-oriented slash IA — Edit / Format / Row / Column / Sheet (Home / Insert / View removed).
 * **Phase 13**: Headless CLI subcommands (Phase 1: `convert`, `info`, `get`, `eval`, `chart`) with strict stream separation.
 * **Phase 14**: Atomic cell mutations and transactional batch pipeline (Phase 2: `set`, `batch`) with automated rollback.
 * **Phase 15**: Model Context Protocol (MCP) native stdio server (Phase 3: `mcp`) with 7 tools for AI agent workflows.

@@ -61,15 +61,7 @@ func LoadWorkbookAuto(path string) (*sheet.Workbook, error) {
 		sh.SetWorkbook(wb)
 		return wb, nil
 	case "md", "html":
-		sh, err := sheet.ImportMarkupFile(path)
-		if err != nil {
-			return nil, err
-		}
-		baseName := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-		wb := sheet.NewWorkbook(baseName)
-		wb.Sheets[0] = sh
-		sh.SetWorkbook(wb)
-		return wb, nil
+		return sheet.ImportMarkupWorkbook(path)
 	default:
 		// Attempt .hwk / .hwkz / json workbook or fallback single sheet
 		return sheet.LoadWorkbookJSON(path)
@@ -115,23 +107,17 @@ func LoadWorkbookFromReader(r io.Reader, format string) (*sheet.Workbook, error)
 		return wb, nil
 
 	case "md", "markdown":
-		sh, err := sheet.ImportMarkdown(data)
+		wb, err := sheet.ImportMarkdownWorkbook(data, "Stream")
 		if err != nil {
 			return nil, fmt.Errorf("markdown parsing failed: %w", err)
 		}
-		wb := sheet.NewWorkbook("Stream")
-		wb.Sheets[0] = sh
-		sh.SetWorkbook(wb)
 		return wb, nil
 
 	case "html", "htm":
-		sh, err := sheet.ImportHTML(data)
+		wb, err := sheet.ImportHTMLWorkbook(data, "Stream")
 		if err != nil {
 			return nil, fmt.Errorf("HTML parsing failed: %w", err)
 		}
-		wb := sheet.NewWorkbook("Stream")
-		wb.Sheets[0] = sh
-		sh.SetWorkbook(wb)
 		return wb, nil
 
 	case "hwk", "hwkz", "json", "":

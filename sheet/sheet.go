@@ -2176,6 +2176,7 @@ func ImportSheetCSV(filepath string) (*Sheet, error) {
 		}
 	}
 	s.Recalculate()
+	s.SetModified(false)
 	return s, nil
 }
 

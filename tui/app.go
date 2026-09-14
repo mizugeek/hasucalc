@@ -105,10 +105,12 @@ func topMenuLabel(item *MenuItem, short bool) string {
 	name := item.Name
 	if short {
 		switch item.Name {
-		case "Insert":
-			name = "Ins"
-		case "Formulas":
-			name = "Form"
+		case "Format":
+			name = "Fmt"
+		case "Column":
+			name = "Col"
+		case "Formula":
+			name = "Fx"
 		}
 	}
 	return formatHotKeyLabel(name, item.Key)
@@ -309,6 +311,7 @@ func NewApp(screen tcell.Screen, sh *sheet.Sheet, filename string) *App {
 	} else {
 		filename = NormalizeHwkSaveFilename(filename)
 	}
+	filename = AbsolutePath(filename)
 	var wb *sheet.Workbook
 	if sh != nil && sh.Workbook() != nil {
 		wb = sh.Workbook()
@@ -407,6 +410,10 @@ func (a *App) GetInputBufferForTest() string {
 
 func (a *App) GetStatusMessageForTest() string {
 	return a.statusMessage
+}
+
+func (a *App) GetFilenameForTest() string {
+	return a.filename
 }
 
 func (a *App) Run() error {
@@ -1069,9 +1076,10 @@ func (a *App) drawScreen() {
 	statusY := h - 1
 
 	// Left: Filename, Active Sheet, & Date/Time
-	fileInfo := a.filename
+	displayName := filepath.Base(a.filename)
+	fileInfo := displayName
 	if hasMultipleSheets {
-		fileInfo = fmt.Sprintf("%s [%s] (%d/%d)", a.filename, a.sheet.Name(), wb.ActiveSheetIndex+1, len(wb.Sheets))
+		fileInfo = fmt.Sprintf("%s [%s] (%d/%d)", displayName, a.sheet.Name(), wb.ActiveSheetIndex+1, len(wb.Sheets))
 	}
 	curStatX := drawTextFast(a.screen, 1, statusY, fileInfo, a.styles.Status, w)
 	curStatX = drawTextFast(a.screen, curStatX, statusY, "  ", a.styles.Status, w)
@@ -3256,6 +3264,10 @@ func (a *App) dispatchPaletteAction(action string) {
 		a.startPromptChain([]PromptItem{{Key: "range", Prompt: "Delete row range: ", UseCursor: true}}, "doDeleteRow")
 	case "doPaletteDeleteCol":
 		a.startPromptChain([]PromptItem{{Key: "range", Prompt: "Delete column range: ", UseCursor: true}}, "doDeleteCol")
+	case "doPaletteAddSheet":
+		a.startPromptChain([]PromptItem{{Key: "name", Prompt: "Enter new worksheet name: "}}, "doWorksheetAdd")
+	case "doPaletteRenameSheet":
+		a.startPromptChain([]PromptItem{{Key: "name", Prompt: "Enter new worksheet name: "}}, "doWorksheetRename")
 	case "doPaletteGlobalColWidth":
 		a.startPromptChain([]PromptItem{{Key: "width", Prompt: "Enter global column width (1..72): ", Default: "9"}}, "doGlobalColWidth")
 	case "doPaletteGoto":
@@ -3369,12 +3381,12 @@ func (a *App) resetViewportAndViews() {
 
 func (a *App) createNewWorksheet() {
 	a.pushUndoWorkbook()
-	a.filename = GenerateUnusedFilename(".", "DATA", ".hwk")
+	a.filename = AbsolutePath(GenerateUnusedFilename(".", "DATA", ".hwk"))
 	wb := sheet.NewWorkbook(a.filename)
 	a.workbook = wb
 	a.sheet = wb.GetActiveSheet()
 	a.resetViewportAndViews()
-	a.statusMessage = fmt.Sprintf("New workbook '%s'.", a.filename)
+	a.statusMessage = fmt.Sprintf("New workbook '%s'.", filepath.Base(a.filename))
 }
 
 func (a *App) getTargetRange() coord.RangeRef {
@@ -5002,7 +5014,7 @@ func (a *App) loadFile(fn string) {
 		a.pushUndoWorkbook()
 		a.workbook = wb
 		a.sheet = wb.GetActiveSheet()
-		a.filename = filepath.Base(fn)
+		a.filename = AbsolutePath(fn)
 		a.resetViewportAndViews()
 		a.statusMessage = fmt.Sprintf("Opened '%s' (%d sheets).", filepath.Base(fn), len(wb.Sheets))
 	} else {
@@ -5046,8 +5058,7 @@ func (a *App) importXLSXFile(fn string) {
 	if len(wb.Sheets) > 1 {
 		sheetTitle = fmt.Sprintf("%s [%s]", filepath.Base(fn), a.sheet.Name())
 	}
-	base := strings.TrimSuffix(filepath.Base(fn), filepath.Ext(fn))
-	a.filename = base + ".hwk"
+	a.filename = SuggestedHwkBeside(fn)
 	a.resetViewportAndViews()
 	a.statusMessage = fmt.Sprintf("Imported '%s' (%d sheets).", sheetTitle, len(wb.Sheets))
 }
@@ -5088,8 +5099,7 @@ func (a *App) importODSFile(fn string) {
 	if len(wb.Sheets) > 1 {
 		sheetTitle = fmt.Sprintf("%s [%s]", filepath.Base(fn), a.sheet.Name())
 	}
-	base := strings.TrimSuffix(filepath.Base(fn), filepath.Ext(fn))
-	a.filename = base + ".hwk"
+	a.filename = SuggestedHwkBeside(fn)
 	a.resetViewportAndViews()
 	a.statusMessage = fmt.Sprintf("Imported '%s' (%d sheets).", sheetTitle, len(wb.Sheets))
 }
@@ -5098,8 +5108,7 @@ func (a *App) saveFile(fn string) {
 	fn = NormalizeHwkSaveFilename(fn)
 	wb := a.currentWorkbook()
 	if err := wb.SaveJSON(fn); err == nil {
-		a.filename = filepath.Base(fn)
-		a.sheet.SetModified(false)
+		a.filename = AbsolutePath(fn)
 		a.statusMessage = fmt.Sprintf("Saved to '%s' (%d sheets).", filepath.Base(fn), len(wb.Sheets))
 	} else {
 		a.statusMessage = fmt.Sprintf("Error saving: %v", err)
@@ -5110,13 +5119,13 @@ func (a *App) importCSVFile(fn string) {
 	RenderLoadingModal(a.screen, fn, "Parsing CSV rows & columns...", a.styles)
 	if s, err := sheet.ImportSheetCSV(fn); err == nil {
 		a.pushUndoWorkbook()
-		base := strings.TrimSuffix(filepath.Base(fn), filepath.Ext(fn))
-		a.filename = base + ".hwk"
+		a.filename = SuggestedHwkBeside(fn)
 		// Replace the workbook so SaveJSON writes the imported sheet (not the old one).
 		wb := sheet.NewWorkbook(a.filename)
 		s.SetName(wb.Sheets[0].Name())
 		s.SetWorkbook(wb)
 		wb.Sheets[0] = s
+		s.SetModified(false)
 		a.workbook = wb
 		a.sheet = s
 		a.resetViewportAndViews()
@@ -5128,18 +5137,14 @@ func (a *App) importCSVFile(fn string) {
 
 func (a *App) importMarkupFile(fn string) {
 	RenderLoadingModal(a.screen, fn, "Parsing tables & text...", a.styles)
-	if s, err := sheet.ImportMarkupFile(fn); err == nil {
+	if wb, err := sheet.ImportMarkupWorkbook(fn); err == nil {
 		a.pushUndoWorkbook()
-		base := strings.TrimSuffix(filepath.Base(fn), filepath.Ext(fn))
-		a.filename = base + ".hwk"
-		wb := sheet.NewWorkbook(a.filename)
-		s.SetName(wb.Sheets[0].Name())
-		s.SetWorkbook(wb)
-		wb.Sheets[0] = s
+		a.filename = SuggestedHwkBeside(fn)
+		wb.Name = filepath.Base(a.filename)
 		a.workbook = wb
-		a.sheet = s
+		a.sheet = wb.GetActiveSheet()
 		a.resetViewportAndViews()
-		a.statusMessage = fmt.Sprintf("Imported markup from '%s'.", filepath.Base(fn))
+		a.statusMessage = fmt.Sprintf("Imported markup from '%s' (%d sheet(s)).", filepath.Base(fn), len(wb.Sheets))
 	} else {
 		a.statusMessage = fmt.Sprintf("Error importing markup: %v", err)
 	}

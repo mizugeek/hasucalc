@@ -183,7 +183,7 @@ func RenderGraphScreen(s tcell.Screen, sh *sheet.Sheet, styles Styles, currentFi
 	w, h := s.Size()
 
 	if len(seriesList) == 0 {
-		msg := "No graph series configured! Use /CA to set series A, /CX to set X-axis."
+		msg := "No graph series configured! Use /CEA to set series A, /CX to set X-axis."
 		hint := "Press any key to return to Worksheet..."
 		drawText(s, (w-runewidth.StringWidth(msg))/2, h/2, msg, styles.Header)
 		drawText(s, (w-runewidth.StringWidth(hint))/2, h/2+2, hint, styles.Default)
@@ -889,7 +889,7 @@ func RenderGraphStatusScreen(s tcell.Screen, sh *sheet.Sheet, styles Styles) {
 			}
 		}
 		colorName := seriesColors[idx]
-		drawTextFast(s, modalX+4, lineY, fmt.Sprintf("Series %s (%-7s): %-15s (/C%s)%s", sKey, colorName, rStr, sKey, legendStr), itemStyle, modalX+modalW-2)
+		drawTextFast(s, modalX+4, lineY, fmt.Sprintf("Series %s (%-7s): %-15s (/CE%s)%s", sKey, colorName, rStr, sKey, legendStr), itemStyle, modalX+modalW-2)
 		lineY++
 	}
 
@@ -924,7 +924,7 @@ func renderPieGraph(s tcell.Screen, sh *sheet.Sheet, g *sheet.GraphConfig, serie
 
 	// Series A provides the pie slice values
 	if len(seriesList) == 0 || len(seriesList[0].values) == 0 {
-		drawText(s, plotLeft+2, plotTop+2, "No data in Series A for Pie Chart (Use /CA to set Series A)", styles.Error)
+		drawText(s, plotLeft+2, plotTop+2, "No data in Series A for Pie Chart (Use /CEA to set Series A)", styles.Error)
 		return
 	}
 

@@ -12,6 +12,7 @@ import (
 
 	"hasucalc/cell"
 	"hasucalc/sheet"
+	"hasucalc/version"
 )
 
 type pngSeriesData struct {
@@ -192,7 +193,7 @@ func ExportGraphPNG(sh *sheet.Sheet, filename string, width, height int) (err er
 	}
 
 	// Footer brand
-	brand := "HasuCalc 2.0"
+	brand := fmt.Sprintf("HasuCalc %s", version.Version)
 	brandW := measureStringPNG(brand, 12)
 	drawStringPNG(img, (width-brandW)/2, height-24, brand, mutedTextCol, 12)
 

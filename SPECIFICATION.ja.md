@@ -54,7 +54,7 @@
 hasucalc [file]                 # 表ファイル (.hwk, .hwkz, .xlsx, .ods, .csv, .md, .html) を直接開く
 hasucalc <subcommand> [flags]   # ヘッドレスコマンドを実行 (convert, info, get, eval, chart, set, batch, mcp)
 hasucalc --demo, -d             # サンプルデータ & グラフ設定済みデモ画面で起動
-hasucalc --version, -v          # バージョン情報 (HasuCalc 2.0.2, Go runtime, OS/Arch) を表示
+hasucalc --version, -v          # バージョン情報 (HasuCalc 2.1.0, Go runtime, OS/Arch) を表示
 hasucalc --help, -h             # コマンドラインヘルプを表示
 ```
 
@@ -249,42 +249,40 @@ hasucalc/
   * `/FS` : Save（保存ダイアログ）
   * `/FX` : Export → 形式（`C` CSV / `E` Excel / `O` ODS / `M` Markdown）→ Scope（`S` Sheet / `R` Range）
   * `/FQ` : Quit（終了）
-* **`/H` (Home)**:
-  * `/HU` `/HR` : Undo / Redo
-  * `/HX` `/HC` `/HV` : Cut / Copy / Paste
-  * `/HS` : Paste-Special（Values `/HSV`, Link `/HSL`, Transpose `/HST`）
-  * `/HK` : Clear（消去）
-  * `/HF` `/HN` `/HB` `/HE` `/HA` : Find / Next / Prev / Replace / Find-All
-  * `/HG` : Goto
-  * `/HM` : Number（Currency `/HMC`, Percent `/HMP`, Fixed `/HMF`, Comma `/HM,`, Date `/HMD`, Scientific `/HMS`, General `/HMG`）
-  * `/HL` : Align（Left `/HLL`, Right `/HLR`, Center `/HLC`）
-  * `/HW` : Cells（行・列挿入削除・列幅 `/HWI` `/HWD` `/HWC` `/HWK` `/HWW` `/HWE` `/HWG`）
-* **`/I` (Insert)**:
-  * `/IF` : Function（関数ブラウザ）
-  * `/IR` `/IC` : Rows / Columns（挿入）
-  * `/IT` `/IN` : Today / Now
-  * `/IH` : Chart（F10 表示）
-* **`/O` (Formulas)**:
-  * `/OS` : AutoSum（`Alt+=`）
-  * `/OF` : Insert-Function
-  * `/OA` `/OC` `/OM` `/OI` : Average / Count / Max / Min
-  * `/O9` : Recalculate（`F9`）
+* **`/E` (Edit)**:
+  * `/EH` : History（Undo `/EHU`, Redo `/EHR`）
+  * `/EC` : Clipboard（Cut `/ECX`, Copy `/ECC`, Paste `/ECV` → All `/ECVA`, Values `/ECVV`, Link `/ECVL`, Transpose `/ECVT`）
+  * `/EK` : Clear（消去）
+  * `/EF` : Find サブ（Find `/EFF`, Next `/EFN`, Prev `/EFP`, Replace `/EFE`, All `/EFA`）
+  * `/EG` : Goto
+* **`/M` (Format)**:
+  * `/MN` : Number（Currency `/MNC`, Percent `/MNP`, Fixed `/MNF`, Comma `/MN,`, Date `/MND`, Scientific `/MNS`, General `/MNG`）
+  * `/MA` : Align（Left `/MAL`, Right `/MAR`, Center `/MAC`）
+* **`/R` (Row)**:
+  * `/RI` `/RD` : Insert / Delete
+* **`/L` (Column)**:
+  * `/LI` `/LD` : Insert / Delete
+  * `/LW` : Width（Set `/LWS`, Reset `/LWR`, Global `/LWG`）
+* **`/W` (Sheet)**:
+  * `/WA` `/WD` `/WR` : Add / Delete / Rename
+  * `/WG` : Go（Select `/WGS`, Next `/WGN`, Prev `/WGP`）
+  * `/WF` : Freeze（Both `/WFB`, Horizontal `/WFH`, Vertical `/WFV`, Clear `/WFC`）
 * **`/D` (Data)**:
   * `/DS` : Sort（Ascending `/DSA`, Descending `/DSD`, Horiz-Asc `/DSH`, Horiz-Desc `/DSZ`, Reset `/DSR`）
-  * `/DA` : AutoFill
-  * `/DF` : Fill（開始・増分・停止の対話指定）
+  * `/DF` : Fill（Auto `/DFA`, Series `/DFS`, Down `/DFD`, Right `/DFR`）
   * `/DT` : Transpose（範囲転置）
   * `/DN` : Names（Create `/DNC`, Delete `/DND`, List `/DNL`）
-* **`/V` (View)**:
-  * `/VF` : Freeze-Panes（Both `/VFB`, Horizontal `/VFH`, Vertical `/VFV`, Clear `/VFC`）
-  * `/VS` `/VN` `/VP` : Select / Next / Prev sheet
-  * `/VA` `/VD` `/VR` : Add / Delete / Rename sheet
+* **`/O` (Formula)**:
+  * `/OA` : Aggregate（Sum `/OAS`, Average `/OAA`, Count `/OAC`, Max `/OAM`, Min `/OAI`）
+  * `/OF` : Function（関数ブラウザ）
+  * `/OD` : Date（Today `/ODT`, Now `/ODN`）
+  * `/O9` : Recalculate（`F9`）
 * **`/C` (Chart)**:
   * `/CV` : View（F10）
-  * `/CT` : Type（Line, Bar, Stacked, Pie）
+  * `/CT` : Type（Line `/CTL`, Bar `/CTB`, Stacked `/CTS`, Pie `/CTP`）
   * `/CI` : Title
   * `/CX` : X-Axis
-  * `/CA`〜`/CF` : Series-A〜F
+  * `/CE` : Series（A〜F → `/CEA`〜`/CEF`）
   * `/CS` : Status
   * `/CP` : Save-PNG
 * **`/?` (Help)**:
@@ -296,40 +294,40 @@ hasucalc/
 
 ### 3.6 検索・置換・ジャンプ仕様
 
-* **GOTO ジャンプ (`Ctrl+G` / `F5` / `/HG`)**:
+* **GOTO ジャンプ (`Ctrl+G` / `F5` / `/EG`)**:
   - 単一セル（`B10`）、矩形範囲（`B2..D10`）、他シート（`Sheet2!A1`）、定義済み名前付き範囲（`Total`）へのジャンプに対応。
   - ジャンプ先セルが画面外にある場合、ビューポートが自動スクロールして画面内に収まるよう調整。
-* **シート内検索 (`Ctrl+F` / `/HF`) & 次/前 (`F3` / `Shift+F3`)**:
+* **シート内検索 (`Ctrl+F` / `/EFF`) & 次/前 (`F3` / `Shift+F3`)**:
   - 生入力文字列（`RawInput`）、数式計算値（`Value`）、フォーマット表示文字列（`FormattedValue`）のすべてを対象にインクリメンタル検索。
   - シート末尾に達した場合は先頭から循環ラップアラウンド。
-* **検索と置換 (`Ctrl+H` / `/HE`)**:
+* **検索と置換 (`Ctrl+H` / `/EFE`)**:
   - 個別確認置換（`Y`: 置換して次へ, `N`: スキップ, `A`: 一括全置換, `Esc`: 中断）。
   - 数式計算結果（例: `=B8+1` の結果としての `24`）を含むセルも漏れなく置換可能。
-* **ワークブック全体検索 (`/HA` Find-All)**:
+* **ワークブック全体検索 (`/EFA` Find-All)**:
   - ブック内の全シートを横断検索し、該当セルが存在するシートへ自動切り替えしてフォーカス。
 
 ---
 
 ### 3.7 ウィンドウ枠の固定仕様 (Freeze-Panes)
 
-* **コマンド**: `/VF`（View → Freeze-Panes）
-  - `/VFB` (Both): カーソル行より上・カーソル列より左を同時に固定。
-  - `/VFH` (Horizontal): カーソル行より上を行固定。
-  - `/VFV` (Vertical): カーソル列より左を列固定。
-  - `/VFC` (Clear): すべての固定枠を解除。
+* **コマンド**: `/WF`（Sheet → Freeze）
+  - `/WFB` (Both): カーソル行より上・カーソル列より左を同時に固定。
+  - `/WFH` (Horizontal): カーソル行より上を行固定。
+  - `/WFV` (Vertical): カーソル列より左を列固定。
+  - `/WFC` (Clear): すべての固定枠を解除。
 * **描画保護**: 水平・垂直スクロール時も、固定された見出し行・見出し列が画面左端・上端に常時正しく描画されます。
 
 ---
 
 ### 3.8 連続データ作成 & 行列入替仕様 (AutoFill & Transpose)
 
-* **AutoFill（`/DA`）**:
+* **AutoFill（`/DFA`）**:
   - 選択範囲の先頭セル（および2番目のセル）から規則性を自動検出。
   - 数値等差数列（10, 20 $\rightarrow$ 30, 40...）
   - 日付連番（`YYYY/MM/DD`, `YYYY-MM-DD`, `YYYY.MM.DD` 等を自動認識して 1日単位等で展開）。
-* **Data Fill（`/DF`）**:
+* **Data Fill（`/DFS`）**:
   - 開始値、増分ステップ（`1d` [日], `1w` [週], `1m` [月], `1y` [年], 数値）、停止値を対話プロンプトで指定して展開。
-* **Paste-Transpose（`/HST` または コマンドパレット）**:
+* **Paste-Transpose（`/ECVT` または コマンドパレット）**:
   - `Ctrl+C` でコピーした矩形データを、現在位置に行列を入れ替えて貼り付け（数式相対参照も縦横反転追従）。
 * **Range Transpose（`/DT`）**:
   - 元範囲と展開先セルを指定してマトリクス転置展開（インプレース転置時の残余データ自動クリア対応）。
@@ -403,11 +401,11 @@ HasuCalc の正本形式は `.hwk` / `.hwkz` です。以下の外部フォー�
 * **CSV (`.csv`)**: **UTF-8 BOM（`0xEF, 0xBB, 0xBF`）を自動付与**し、外部の表計算ソフトで文字化けしにくくします。
 * **Markdown (`.md` / `.markdown`)**:
   * **書き出し**: シートまたは範囲を GFM パイプ表へ（`/FX` → Markdown）。
-  * **読み込み**（CLI または Open ダイアログ）: GFM の `| ... |` 表は複数列セルになる（`|---|` 区切り行はスキップ）。表以外の行（見出し・段落・コードフェンス内の行など）は **A 列のラベル**になる。本文は LABEL 強制のため、`=SUM(...)` のように見える文字列も数式評価しない。強調・リンクは平文に簡略化。完全な CommonMark/GFM エンジンではない。
+  * **読み込み**（CLI または Open ダイアログ）: GFM の `| ... |` 表は **1枚の `Tables` シートに縦積み**する。各表の先頭にバナー行（`══ 見出し ══`。直前の見出し名、または `Table N`）を置き、表と表のあいだは空行で区切る。表以外の行は `Document` シートの A 列ラベル。`Document` には `→ Tables!A12 (見出し, N rows)` のような参照行を残す。表のみのファイルは `Tables` だけになる。列幅は表内容に合わせて自動調整。`|---|` 区切り行はスキップ。本文は LABEL 強制のため、`=SUM(...)` のように見える文字列も数式評価しない。強調・リンクは平文に簡略化。完全な CommonMark/GFM エンジンではない。
 * **HTML (`.html` / `.htm`)**:
-  * **読み込みのみ**（CLI または Open ダイアログ）: 各 `<table>` をグリッド化し、見出し・段落・リストなどのブロック文言は A 列ラベルにする。セル内の入れ子マークアップはテキストに平坦化。script / style / コメントは無視。ブラウザ並みの HTML エンジンではなく、壊れた・特殊なマークアップは不完全になり得る。
+  * **読み込みのみ**（CLI または Open ダイアログ）: 各 `<table>` を Markdown と同様に **1枚の `Tables` シート**へバナー区切りで積み上げ、見出し・段落・リストなどのブロック文言は `Document` の A 列ラベルにする。セル内の入れ子マークアップはテキストに平坦化。script / style / コメントは無視。ブラウザ並みの HTML エンジンではなく、壊れた・特殊なマークアップは不完全になり得る。
 
-`.md` / `.html` を開くと現在のブックを置き換え、単一シートとして取り込み、保存名は `.hwk` を提案する（CSV 取り込みと同じ流れ）。
+`.md` / `.html` を開くと現在のブックを `Document` + `Tables`（表のみなら `Tables` だけ）に置き換え、保存名は `.hwk` を提案する（CSV 取り込みと同じ流れ）。
 
 ---
 
@@ -477,12 +475,13 @@ HasuCalc 2.0 は、自律AIエージェント、シェルパイプライン、CI
   - ウィンドウ枠の固定（Freeze-Panes）の水平スクロール描画修正。
 * **フェーズ 11: 連続データ作成 & 行列入替の実装**:
   - 柔軟な日付パーサー（`ParseFlexibleDate`）による YYYY/MM/DD や YYYY-MM-DD 連番対応。
-  - AutoFill（`/DA`）、Data Fill（`/DF`）、Paste-Transpose（`/HST`）、Range Transpose（`/DT`）。
+  - AutoFill（`/DFA`）、Data Fill（`/DFS`）、Paste-Transpose（`/ECVT`）、Range Transpose（`/DT`）。
 * **フェーズ 12: UI & メニューの最適化・スリム化**:
   - Line 0 の重複日時表示を排除し、ステータスバーに統一。
-  - `Titles` を直感的な `Freeze-Panes`（当時 `/WF`、現行は `/VF`）に変更。
+  - `Titles` を直感的な `Freeze-Panes`（当時 `/WF` → `/VF`、現行は Sheet 配下の `/WF`）に変更。
   - `Edit` メニューを4グループに整理し、`Next` と `Previous` を隣接配置。
   - 重複・冗長なメニュー項目（Line-Single/Double, Format Column-Width, 3段階Sort, Edit-Cell, Select-All, Recalculate, Fill-Down/Right）を削除して洗練。
+* **フェーズ 13+: オブジェクト指向スラッシュメニュー体系への刷新**: Edit / Format / Row / Column / Sheet（Home / Insert / View を廃止）。
 * **フェーズ 13: ヘッドレスCLI (Phase 1)**:
   - TUIを開かずに利用できる非対話型サブコマンド（`convert`, `info`, `get`, `eval`, `chart`）の実装。
   - `stdout`/`stderr` の厳格なストリーム分離と決定論的終了コード（Exit 0 / 1）の確立。

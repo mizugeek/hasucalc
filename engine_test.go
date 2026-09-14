@@ -669,9 +669,9 @@ func TestGraphMenuSetBNavigation(t *testing.T) {
 
 	// Press '/' to open menu
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
-	// Press 'C' to open Chart menu
+	// Press 'C' to open Chart menu, 'E' for Series, 'B' for series B (/CEB)
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'C', tcell.ModNone))
-	// Press 'B' to select Series-B
+	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'B', tcell.ModNone))
 
 	// Should now be in PROMPT mode for Set Series B range
@@ -701,6 +701,7 @@ func TestGraphMenuSetBNavigation(t *testing.T) {
 	// Test opening Set-B again -> prompt should pre-populate with "B1..B10"
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'C', tcell.ModNone))
+	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'B', tcell.ModNone))
 	// Press Enter without modifying
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
@@ -737,12 +738,12 @@ func TestMenuRowCleanRendering(t *testing.T) {
 	}
 	row1Str := string(row1Chars)
 
-	// In row1Str, "File[F]" is followed by space and "Home[H]", NOT stray junk
+	// In row1Str, "File[F]" is followed by space and "Edit[E]", NOT stray junk
 	if strings.Contains(row1Str, "File[F] n") || strings.Contains(row1Str, "Company") {
 		t.Errorf("stray character found on menu row: %q", row1Str)
 	}
-	if !strings.Contains(row1Str, "Home[H]") {
-		t.Errorf("expected Home[H] on menu row, got: %q", row1Str)
+	if !strings.Contains(row1Str, "Edit[E]") {
+		t.Errorf("expected Edit[E] on menu row, got: %q", row1Str)
 	}
 	// Classic 80-column terminals (e.g. Raspberry Pi) must still show Help
 	if !strings.Contains(row1Str, "Help[?]") {
@@ -877,9 +878,10 @@ func TestGraphPromptSelectionPriority(t *testing.T) {
 
 	app := tui.NewApp(s, sh, "DATA.hwk")
 
-	// 1. Without selection, /CA should pre-populate old range "A4..G4"
+	// 1. Without selection, /CEA should pre-populate old range "A4..G4"
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'C', tcell.ModNone))
+	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone))
 	// Confirm without change
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
@@ -900,9 +902,10 @@ func TestGraphPromptSelectionPriority(t *testing.T) {
 		app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRight, 0, tcell.ModShift))
 	}
 
-	// Open /CA -> should pre-populate "B6..F6" (NOT "A4..G4")!
+	// Open /CEA -> should pre-populate "B6..F6" (NOT "A4..G4")!
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'C', tcell.ModNone))
+	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
 
@@ -1028,10 +1031,10 @@ func TestFunctionPickerModal(t *testing.T) {
 
 	app := tui.NewApp(s, sh, "DATA.hwk")
 
-	// Trigger /IF -> opens Function Picker
+	// Trigger /OF -> opens Function Picker
 	s.InjectKey(tcell.KeyEnter, 0, tcell.ModNone)
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
-	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'I', tcell.ModNone))
+	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'O', tcell.ModNone))
 	app.HandleEventForTest(tcell.NewEventKey(tcell.KeyRune, 'F', tcell.ModNone))
 }
 
@@ -2049,10 +2052,11 @@ func TestPasteLinkViaSlashMenu(t *testing.T) {
 		app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone))
 	}
 
-	// 4. Open Slash Menu, navigate to Home -> Paste-Special -> Link (/HSL)
+	// 4. Open Slash Menu, navigate to Edit -> Clipboard -> Paste -> Link (/ECVL)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
-	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'H', tcell.ModNone))
-	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'S', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'C', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'V', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'L', tcell.ModNone))
 
 	// 5. Verify linked cell at A20 in Sheet 2
@@ -2768,9 +2772,10 @@ func TestWorkbookWideSearch(t *testing.T) {
 
 	app := tui.NewApp(simScreen, sh1, "test_wb_search.hwk")
 
-	// Trigger Search-All (/HA = Home -> Find-All)
+	// Trigger Search-All (/EFA = Edit -> Find -> All)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
-	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'H', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'F', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone))
 
 	for _, ch := range "Kyoto" {
@@ -2807,9 +2812,9 @@ func TestFreezePanesTitles(t *testing.T) {
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone))
 
-	// Freeze Both (/VFB)
+	// Freeze Both (/WFB)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
-	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'V', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'W', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'F', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'B', tcell.ModNone))
 
@@ -2820,9 +2825,9 @@ func TestFreezePanesTitles(t *testing.T) {
 		t.Fatalf("Expected 2 frozen columns, got %d", sh.FrozenCols())
 	}
 
-	// Clear freeze (/VFC)
+	// Clear freeze (/WFC)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
-	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'V', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'W', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'F', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'C', tcell.ModNone))
 
@@ -2843,10 +2848,11 @@ func TestDataFillAndFillDownRight(t *testing.T) {
 	sh := wb.GetActiveSheet()
 	app := tui.NewApp(simScreen, sh, "test_data_fill.hwk")
 
-	// 1. Data Fill /DF across A1..A5 with start=10, step=5
+	// 1. Data Fill /DFS across A1..A5 with start=10, step=5
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'D', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'F', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'S', tcell.ModNone))
 
 	for i := 0; i < 10; i++ {
 		app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyBackspace, 0, tcell.ModNone))
@@ -3035,7 +3041,7 @@ func TestPasteTransposeAndAutoFill(t *testing.T) {
 	app := tui.NewApp(simScreen, sh, "test_autofill.hwk")
 	app.RunOnceForTest()
 
-	// 1. Test AutoFill with 2 seed values: A1=10, A2=20 -> Select A1..A5 -> AutoFill (/DA)
+	// 1. Test AutoFill with 2 seed values: A1=10, A2=20 -> Select A1..A5 -> AutoFill (/DFA)
 	sh.SetCellInput(0, 0, "10", nil)
 	sh.SetCellInput(0, 1, "20", nil)
 	sh.Recalculate()
@@ -3045,9 +3051,10 @@ func TestPasteTransposeAndAutoFill(t *testing.T) {
 	app.ProcessEventForTest(tcell.NewEventMouse(6, 7, tcell.Button1, tcell.ModNone)) // Drag to A5
 	app.ProcessEventForTest(tcell.NewEventMouse(6, 7, tcell.ButtonNone, tcell.ModNone))
 
-	// Run AutoFill (/DA)
+	// Run AutoFill (/DFA)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'D', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'F', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone))
 
 	expected := []float64{10, 20, 30, 40, 50}
@@ -3058,7 +3065,7 @@ func TestPasteTransposeAndAutoFill(t *testing.T) {
 		}
 	}
 
-	// 2. Test Paste Transpose: Copy A1..A5 (5 rows x 1 col) -> Paste Transpose at C1 (/HST)
+	// 2. Test Paste Transpose: Copy A1..A5 (5 rows x 1 col) -> Paste Transpose at C1 (/ECVT)
 	// Select A1..A5
 	app.ProcessEventForTest(tcell.NewEventMouse(6, 3, tcell.Button1, tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventMouse(6, 7, tcell.Button1, tcell.ModNone))
@@ -3070,10 +3077,11 @@ func TestPasteTransposeAndAutoFill(t *testing.T) {
 	// Move to C1 (col 2, row 0)
 	app.ProcessEventForTest(tcell.NewEventMouse(24, 3, tcell.Button1, tcell.ModNone))
 
-	// Paste Transpose (/HST)
+	// Paste Transpose (/ECVT)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
-	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'H', tcell.ModNone))
-	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'S', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'C', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'V', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'T', tcell.ModNone))
 
 	// Verify C1..G1 have 10, 20, 30, 40, 50
@@ -3085,7 +3093,7 @@ func TestPasteTransposeAndAutoFill(t *testing.T) {
 		}
 	}
 
-	// 3. Test Date DataFill and AutoFill: H1 = 2026/08/27, select H1..H5 -> /DA
+	// 3. Test Date DataFill and AutoFill: H1 = 2026/08/27, select H1..H5 -> /DFA
 	sh.SetCellInput(7, 0, "2026/08/27", nil)
 	sh.Recalculate()
 
@@ -3093,9 +3101,10 @@ func TestPasteTransposeAndAutoFill(t *testing.T) {
 	app.ProcessEventForTest(tcell.NewEventMouse(69, 7, tcell.Button1, tcell.ModNone)) // Drag to H5
 	app.ProcessEventForTest(tcell.NewEventMouse(69, 7, tcell.ButtonNone, tcell.ModNone))
 
-	// Run AutoFill (/DA)
+	// Run AutoFill (/DFA)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'D', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'F', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone))
 
 	expectedDates := []string{"2026/08/27", "2026/08/28", "2026/08/29", "2026/08/30", "2026/08/31"}
@@ -3137,8 +3146,8 @@ func TestPasteTransposeAndAutoFill(t *testing.T) {
 }
 
 func TestVersionConstant(t *testing.T) {
-	if version.Version != "2.0.2" {
-		t.Fatalf("Expected version.Version to be '2.0.2', got %q", version.Version)
+	if version.Version != "2.1.0" {
+		t.Fatalf("Expected version.Version to be '2.1.0', got %q", version.Version)
 	}
 	if Version != version.Version {
 		t.Fatalf("Expected CLI Version (%q) to match version.Version (%q)", Version, version.Version)
@@ -3148,9 +3157,26 @@ func TestVersionConstant(t *testing.T) {
 	}
 }
 
+func simulationScreenContains(s tcell.SimulationScreen, want string) bool {
+	contents, w, h := s.GetContents()
+	var b strings.Builder
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			cell := contents[y*w+x]
+			if len(cell.Runes) > 0 {
+				b.WriteRune(cell.Runes[0])
+			} else {
+				b.WriteByte(' ')
+			}
+		}
+		b.WriteByte('\n')
+	}
+	return strings.Contains(b.String(), want)
+}
+
 func TestAboutDialogViaMenuAndDirect(t *testing.T) {
-	if tui.AppVersion != "2.0.2" {
-		t.Fatalf("Expected AppVersion to be '2.0.2', got %q", tui.AppVersion)
+	if tui.AppVersion != "2.1.0" {
+		t.Fatalf("Expected AppVersion to be '2.1.0', got %q", tui.AppVersion)
 	}
 
 	simScreen := tcell.NewSimulationScreen("UTF-8")
@@ -3164,15 +3190,20 @@ func TestAboutDialogViaMenuAndDirect(t *testing.T) {
 	sh := wb.GetActiveSheet()
 	app := tui.NewApp(simScreen, sh, "test_about.hwk")
 
-	// 1. Open About Dialog via Slash Menu /?A
+	// 1. Open About via Slash Menu /?A (pre-queue dismiss for PollEvent)
 	simScreen.PostEvent(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '?', tcell.ModNone))
+	simScreen.PostEvent(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone))
 
-	// 2. Direct RenderAboutScreen verification
+	// 2. Direct RenderAboutScreen — assert version text remains after paint+dismiss
+	want := "HasuCalc  Version 2.1.0"
 	simScreen.PostEvent(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
 	tui.RenderAboutScreen(simScreen, tui.InitStyles())
+	if !simulationScreenContains(simScreen, want) {
+		t.Fatalf("About screen missing %q", want)
+	}
 }
 
 func TestCircularReferenceDetection(t *testing.T) {
@@ -4129,6 +4160,55 @@ func TestCritical_CSVImportThenSaveWritesImportedData(t *testing.T) {
 		if strings.Contains(fmt.Sprintf("%v", sh.GetCell(0, 0).Value), "OLD") {
 			t.Error("saved file still contains OLD_DATA — CSV was not wired into workbook")
 		}
+	}
+}
+
+func TestCritical_OpenKeepsSourceDirAndCleanModified(t *testing.T) {
+	tmp := t.TempDir()
+	mdPath := filepath.Join(tmp, "notes.md")
+	if err := os.WriteFile(mdPath, []byte("# Hi\n\n| A | B |\n|---|---|\n| 1 | 2 |\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	s := tcell.NewSimulationScreen("UTF-8")
+	if err := s.Init(); err != nil {
+		t.Fatal(err)
+	}
+	defer s.Fini()
+
+	app := tui.NewApp(s, sheet.NewSheet(), "DATA.hwk")
+	app.LoadFileForTest(mdPath)
+
+	wantHwk := filepath.Join(tmp, "notes.hwk")
+	gotFn := app.GetFilenameForTest()
+	if gotFn != wantHwk {
+		t.Fatalf("filename after open = %q, want %q (same dir as source)", gotFn, wantHwk)
+	}
+	wb := app.ActiveSheet().Workbook()
+	if wb == nil {
+		t.Fatal("nil workbook")
+	}
+	if wb.IsModified() {
+		t.Fatal("opened markup should not be marked modified")
+	}
+
+	fp := tui.NewFilePicker()
+	fp.Open(tui.FilePickerModeSave, gotFn)
+	if fp.CurrentDirForTest() != tmp {
+		t.Fatalf("save dialog dir = %q, want %q", fp.CurrentDirForTest(), tmp)
+	}
+	if fp.InputBufferForTest() != "notes.hwk" {
+		t.Fatalf("save dialog name = %q, want notes.hwk", fp.InputBufferForTest())
+	}
+}
+
+func TestSuggestedHwkBeside(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "report.csv")
+	got := tui.SuggestedHwkBeside(src)
+	want := filepath.Join(dir, "report.hwk")
+	if got != want {
+		t.Fatalf("SuggestedHwkBeside = %q, want %q", got, want)
 	}
 }
 

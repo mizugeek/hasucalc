@@ -157,39 +157,35 @@ func main() {
 			ext := strings.ToLower(filepath.Ext(arg))
 			var loadErr error
 			if ext == ".xlsx" || ext == ".xlsm" {
-				baseName := strings.TrimSuffix(filepath.Base(arg), filepath.Ext(arg))
-				filename = baseName + ".hwk"
+				filename = tui.SuggestedHwkBeside(arg)
 				if loadedWb, err := sheet.ImportXLSXWorkbook(arg); err == nil {
 					sh = loadedWb.GetActiveSheet()
 				} else {
 					loadErr = err
 				}
 			} else if ext == ".ods" || ext == ".ots" {
-				baseName := strings.TrimSuffix(filepath.Base(arg), filepath.Ext(arg))
-				filename = baseName + ".hwk"
+				filename = tui.SuggestedHwkBeside(arg)
 				if loadedWb, err := sheet.ImportODSWorkbook(arg); err == nil {
 					sh = loadedWb.GetActiveSheet()
 				} else {
 					loadErr = err
 				}
 			} else if ext == ".csv" || ext == ".tsv" {
-				baseName := strings.TrimSuffix(filepath.Base(arg), filepath.Ext(arg))
-				filename = baseName + ".hwk"
+				filename = tui.SuggestedHwkBeside(arg)
 				if loadedCSV, err := sheet.ImportSheetCSV(arg); err == nil {
 					sh = loadedCSV
 				} else {
 					loadErr = err
 				}
 			} else if ext == ".md" || ext == ".markdown" || ext == ".html" || ext == ".htm" {
-				baseName := strings.TrimSuffix(filepath.Base(arg), filepath.Ext(arg))
-				filename = baseName + ".hwk"
-				if loadedMarkup, err := sheet.ImportMarkupFile(arg); err == nil {
-					sh = loadedMarkup
+				filename = tui.SuggestedHwkBeside(arg)
+				if loadedWb, err := sheet.ImportMarkupWorkbook(arg); err == nil {
+					sh = loadedWb.GetActiveSheet()
 				} else {
 					loadErr = err
 				}
 			} else {
-				filename = filepath.Base(arg)
+				filename = tui.AbsolutePath(arg)
 				if loadedWb, err := sheet.LoadWorkbookJSON(arg); err == nil {
 					sh = loadedWb.GetActiveSheet()
 				} else if loaded, err := sheet.LoadSheetJSON(arg); err == nil {

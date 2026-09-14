@@ -4122,11 +4122,11 @@ func TestBugfixV4CrossSheetUndoOnInsertDelete(t *testing.T) {
 	app := tui.NewApp(simScreen, sh1, "test_cross_undo.hwk")
 	app.RunOnceForTest()
 
-	// Switch cursor to Sheet1 row 1 (A1) and insert a row via /IR
+	// Switch cursor to Sheet1 row 1 (A1) and insert a row via /RI
 	app.SetCursorForTest(0, 0)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone))
-	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'I', tcell.ModNone))
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'R', tcell.ModNone))
+	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyRune, 'I', tcell.ModNone))
 	// Enter range (default row)
 	app.ProcessEventForTest(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
 
