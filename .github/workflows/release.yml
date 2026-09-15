@@ -127,6 +127,12 @@ jobs:
     needs: [create-tag, build]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.create-tag.outputs.tag }}
+
       - name: Download archives
         uses: actions/download-artifact@v4
         with:
@@ -143,17 +149,44 @@ jobs:
           cat SHA256SUMS
           ls -la
 
+      - name: Build release notes from commits
+        id: notes
+        env:
+          VERSION: ${{ needs.create-tag.outputs.version }}
+          TAG: ${{ needs.create-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          PREV="$(git describe --tags --abbrev=0 --match 'v*' "${TAG}^" 2>/dev/null || true)"
+          {
+            echo "## What's Changed"
+            echo
+            if [ -n "${PREV}" ]; then
+              echo "Changes since \`${PREV}\`:"
+              echo
+              git log --no-merges --pretty=format:'- %s (%h)' "${PREV}..${TAG}"
+              echo
+              echo
+            else
+              echo "- Initial tagged release"
+              echo
+            fi
+            echo "## Downloads"
+            echo
+            echo "Pre-built archives for Linux (\`.tar.gz\`), macOS, and Windows (\`.zip\`)."
+            echo "Each archive contains the binary and \`LICENSE\`. Verify with \`SHA256SUMS\`."
+            echo
+            echo "Version source of truth: \`version/version.go\` (\`version.Version\` = \`${VERSION}\`)."
+          } > release_notes.md
+          echo "----- release_notes.md -----"
+          cat release_notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.create-tag.outputs.tag }}
           name: HasuCalc ${{ needs.create-tag.outputs.version }}
-          body: |
-            HasuCalc `${{ needs.create-tag.outputs.version }}`
-
-            Pre-built archives for Linux (`.tar.gz`), macOS, and Windows (`.zip`).
-            Each archive contains the binary and `LICENSE`. Verify downloads with `SHA256SUMS`.
-
-            Version source of truth: `version/version.go` (`version.Version`).
+          body_path: release_notes.md
+          generate_release_notes: false
           files: artifacts/*
           fail_on_unmatched_files: true
+          make_latest: true
